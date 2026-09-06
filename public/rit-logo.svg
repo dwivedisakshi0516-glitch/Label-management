@@ -1,0 +1,191 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" width="100%" height="100%">
+  <defs>
+    <!-- Background subtle radial vignette for standalone viewer -->
+    <radialGradient id="rit-bg-light" cx="50%" cy="45%" r="60%">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="70%" stop-color="#f8fafc" />
+      <stop offset="100%" stop-color="#f1f5f9" />
+    </radialGradient>
+
+    <!-- Deep Royal Navy Gradient for R -->
+    <linearGradient id="rit-r-base" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#143468" />
+      <stop offset="45%" stop-color="#1e4da1" />
+      <stop offset="75%" stop-color="#0e2652" />
+      <stop offset="100%" stop-color="#071530" />
+    </linearGradient>
+
+    <!-- 3D Curved Specular Highlight for R Shoulder -->
+    <linearGradient id="rit-r-curve-highlight" x1="0%" y1="0%" x2="100%" y2="70%">
+      <stop offset="0%" stop-color="#2a66c4" />
+      <stop offset="35%" stop-color="#3b82f6" />
+      <stop offset="70%" stop-color="#1d4ed8" />
+      <stop offset="100%" stop-color="#081836" />
+    </linearGradient>
+
+    <!-- Lower Leg of R Gradient -->
+    <linearGradient id="rit-r-leg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#133366" />
+      <stop offset="60%" stop-color="#0c2044" />
+      <stop offset="100%" stop-color="#061228" />
+    </linearGradient>
+
+    <!-- Electric Cyan Gradient for I -->
+    <linearGradient id="rit-i-vibrant" x1="0%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#00a3ff" />
+      <stop offset="30%" stop-color="#0088eb" />
+      <stop offset="70%" stop-color="#005db3" />
+      <stop offset="100%" stop-color="#00356e" />
+    </linearGradient>
+
+    <!-- Top Slanted Bevel Highlight for I -->
+    <linearGradient id="rit-i-facet" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="60%" stop-color="#0284c7" />
+      <stop offset="100%" stop-color="#0369a1" />
+    </linearGradient>
+
+    <!-- Deep Navy Gradient for T Crossbar & Stem -->
+    <linearGradient id="rit-t-base" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#143468" />
+      <stop offset="40%" stop-color="#0f254e" />
+      <stop offset="100%" stop-color="#061229" />
+    </linearGradient>
+
+    <linearGradient id="rit-t-stem" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#091834" />
+      <stop offset="50%" stop-color="#102957" />
+      <stop offset="100%" stop-color="#051024" />
+    </linearGradient>
+
+    <!-- Soft Drop Shadow for Emblem -->
+    <filter id="rit-subtle-shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#071530" flood-opacity="0.08" />
+    </filter>
+  </defs>
+
+  <!-- Optional Background Canvas -->
+  <rect width="1000" height="1000" fill="url(#rit-bg-light)" />
+
+  <!-- Monogram Emblem Group -->
+  <g filter="url(#rit-subtle-shadow)">
+    <!-- ==================== LETTER 'R' ==================== -->
+    <!-- 1. Top Horizontal Wing & Upper Curve of R -->
+    <path
+      d="M 212 275 
+         L 430 275 
+         C 475 275, 503 305, 503 355 
+         C 503 408, 470 442, 412 452 
+         L 412 410 
+         C 445 402, 462 382, 462 355 
+         C 462 320, 442 335, 415 335 
+         L 272 335 
+         Z"
+      fill="url(#rit-r-base)"
+    />
+
+    <!-- 2. 3D Cylindrical Curved Shoulder of R -->
+    <path
+      d="M 390 275 
+         L 430 275 
+         C 475 275, 503 305, 503 355 
+         C 503 392, 485 422, 452 440 
+         C 438 410, 436 360, 390 335 
+         Z"
+      fill="url(#rit-r-curve-highlight)"
+    />
+
+    <!-- 3. Inner Loop Arc Sweep of R -->
+    <path
+      d="M 360 335 
+         C 430 335, 462 350, 462 375 
+         C 462 420, 400 458, 360 458 
+         L 360 405 
+         C 385 405, 420 392, 420 375 
+         C 420 358, 395 335, 360 335 Z"
+      fill="#0d2450"
+    />
+
+    <!-- 4. Lower Diagonal Leg of R (Slanted 45° Down-Right to Baseline) -->
+    <polygon
+      points="270,405 355,405 505,570 420,570"
+      fill="url(#rit-r-leg)"
+    />
+
+    <!-- Subtle inner shadow seam on leg -->
+    <polygon
+      points="270,405 355,405 375,425 290,425"
+      fill="#061226"
+      opacity="0.4"
+    />
+
+    <!-- ==================== LETTER 'I' ==================== -->
+    <!-- Sharp Beveled Vertical Column with Electric Cyan Gradient -->
+    <polygon
+      points="520,310 580,370 580,570 520,570"
+      fill="url(#rit-i-vibrant)"
+    />
+
+    <!-- Top Slanted Bevel Highlight -->
+    <polygon
+      points="520,310 580,370 565,370 520,325"
+      fill="url(#rit-i-facet)"
+    />
+
+    <!-- Left Vertical Edge Bevel Sheen -->
+    <polygon
+      points="520,310 526,316 526,570 520,570"
+      fill="#7dd3fc"
+      opacity="0.65"
+    />
+
+    <!-- ==================== LETTER 'T' ==================== -->
+    <!-- Top Horizontal Crossbar with Matching 45° Slanted Edges -->
+    <polygon
+      points="536,275 790,275 730,335 596,335"
+      fill="url(#rit-t-base)"
+    />
+
+    <!-- Vertical Column of T to Baseline -->
+    <polygon
+      points="614,335 678,335 678,570 614,570"
+      fill="url(#rit-t-stem)"
+    />
+
+    <!-- Top Right Corner Cut Sheen on T -->
+    <polygon
+      points="790,275 730,335 715,335 775,275"
+      fill="#1d4ed8"
+      opacity="0.35"
+    />
+  </g>
+
+  <!-- ==================== TYPOGRAPHY ==================== -->
+  <!-- "R I T" Bold Display Title -->
+  <text
+    x="500"
+    y="692"
+    text-anchor="middle"
+    font-family="'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+    font-size="80"
+    font-weight="900"
+    letter-spacing="24"
+    fill="#071530"
+  >
+    R I T
+  </text>
+
+  <!-- "IDEAS DRIVE PROGRESS" Subtitle -->
+  <text
+    x="500"
+    y="742"
+    text-anchor="middle"
+    font-family="'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+    font-size="20"
+    font-weight="600"
+    letter-spacing="14"
+    fill="#2f3e58"
+  >
+    IDEAS DRIVE PROGRESS
+  </text>
+</svg>

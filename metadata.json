@@ -1,0 +1,6 @@
+{
+  "name": "RAMA IT SOLUTION",
+  "description": "Industrial product master data management, visual label designer, and automated operator printing suite by RAMA IT SOLUTION.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

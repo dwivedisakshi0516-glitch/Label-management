@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  # 1. MongoDB Database
+  mongodb:
+    image: mongo:latest
+    container_name: rit_mongodb
+    restart: always
+    environment:
+      MONGO_INITDB_DATABASE: rit_label_db
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  # 2. FastAPI Backend
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: rit_backend
+    restart: always
+    environment:
+      - PROJECT_NAME=RIT Label Precision Suite
+      - API_V1_STR=/api
+      - MONGODB_URL=mongodb://mongodb:27017
+      - DATABASE_NAME=rit_label_db
+      - SECRET_KEY=rit-secret-key-super-secure-jwt-token-2026-label-precision-suite
+      - DEFAULT_ADMIN_EMAIL=admin@rit.com
+      - DEFAULT_ADMIN_PASSWORD=admin123
+    ports:
+      - "8000:8000"
+    depends_on:
+      - mongodb
+
+  # 3. React Vite Frontend with Nginx
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: rit_frontend
+    restart: always
+    ports:
+      - "80:80"
+      - "5173:80"
+    depends_on:
+      - backend
+
+volumes:
+  mongo_data:
+    driver: local
