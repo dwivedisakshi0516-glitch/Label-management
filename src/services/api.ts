@@ -12,7 +12,17 @@ import {
   DashboardStats
 } from '../types';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
+const configuredApiUrl = import.meta.env.VITE_API_BASE_URL;
+const isBrowserOnLocalhost =
+  typeof window !== 'undefined' &&
+  ['localhost', '127.0.0.1'].includes(window.location.hostname);
+const isConfiguredForLocalhost =
+  typeof configuredApiUrl === 'string' &&
+  /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?\/api\/?$/i.test(configuredApiUrl);
+
+const API_BASE_URL = isConfiguredForLocalhost && !isBrowserOnLocalhost
+  ? '/api'
+  : configuredApiUrl || '/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
