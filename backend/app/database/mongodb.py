@@ -1,5 +1,6 @@
 import logging
 import asyncio
+import os
 from typing import Optional, Dict, Any, List
 from pymongo import MongoClient
 from backend.app.core.config import settings
@@ -212,6 +213,7 @@ class Database:
     client: Optional[MongoClient] = None
     db: Any = None
     is_fallback: bool = False
+    connection_error: Optional[str] = None
     _fallback_collections: Dict[str, FallbackAsyncCollection] = {}
     _live_collections: Dict[str, SyncAsyncCollection] = {}
     _connect_lock: Optional[asyncio.Lock] = None
@@ -240,16 +242,20 @@ async def connect_to_mongo():
     mongo_target = settings.MONGODB_URL.split("@")[-1] if "@" in settings.MONGODB_URL else settings.MONGODB_URL
     logger.info("Connecting to MongoDB target %s...", mongo_target)
     try:
+        if os.getenv("VERCEL") and settings.MONGODB_URL == "mongodb://localhost:27017":
+            raise RuntimeError("MONGODB_URL is not configured for Vercel production.")
         client = MongoClient(settings.MONGODB_URL, serverSelectionTimeoutMS=2000)
         # Verify connection
         client.admin.command('ping')
         db_manager.client = client
         db_manager.db = client[settings.DATABASE_NAME]
         db_manager.is_fallback = False
+        db_manager.connection_error = None
         db_manager._live_collections = {}
         logger.info("Successfully connected to live MongoDB (%s)!", settings.DATABASE_NAME)
     except Exception as e:
         logger.warning("Could not connect to live MongoDB daemon (%s). Initializing high-performance asynchronous internal document store.", e)
+        db_manager.connection_error = str(e)
         db_manager.is_fallback = True
         db_manager.db = None
 
