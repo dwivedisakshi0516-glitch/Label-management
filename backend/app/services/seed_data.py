@@ -19,13 +19,18 @@ async def seed_initial_data():
 
     # 1. Seed Default Admin User
     if settings.DEFAULT_ADMIN_EMAIL and settings.DEFAULT_ADMIN_PASSWORD:
-        if len(settings.DEFAULT_ADMIN_PASSWORD.encode("utf-8")) > 72:
-            logger.error("DEFAULT_ADMIN_PASSWORD is too long for bcrypt; skipping admin seed.")
-        else:
+        try:
+            if len(settings.DEFAULT_ADMIN_PASSWORD.encode("utf-8")) > 72:
+                raise ValueError("DEFAULT_ADMIN_PASSWORD is too long for bcrypt.")
+
             admin = await users_coll.find_one({"email": settings.DEFAULT_ADMIN_EMAIL})
+            password_hash = get_password_hash(settings.DEFAULT_ADMIN_PASSWORD)
+        except Exception as exc:
+            logger.error("Skipping admin seed because password hashing failed: %s", exc)
+        else:
             admin_doc = {
                 "email": settings.DEFAULT_ADMIN_EMAIL,
-                "password_hash": get_password_hash(settings.DEFAULT_ADMIN_PASSWORD),
+                "password_hash": password_hash,
                 "name": "System Administrator",
                 "role": "admin",
                 "updated_at": datetime.datetime.utcnow().isoformat()
