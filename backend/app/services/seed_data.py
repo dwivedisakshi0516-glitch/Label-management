@@ -15,17 +15,21 @@ async def seed_initial_data():
     settings_coll = db_manager.get_collection("settings")
 
     # 1. Seed Default Admin User
-    admin = await users_coll.find_one({"email": settings.DEFAULT_ADMIN_EMAIL})
-    if not admin:
+    if settings.DEFAULT_ADMIN_EMAIL and settings.DEFAULT_ADMIN_PASSWORD:
+        admin = await users_coll.find_one({"email": settings.DEFAULT_ADMIN_EMAIL})
         admin_doc = {
-            "id": str(uuid.uuid4()),
             "email": settings.DEFAULT_ADMIN_EMAIL,
             "password_hash": get_password_hash(settings.DEFAULT_ADMIN_PASSWORD),
             "name": "System Administrator",
             "role": "admin",
-            "created_at": datetime.datetime.utcnow().isoformat()
+            "updated_at": datetime.datetime.utcnow().isoformat()
         }
-        await users_coll.insert_one(admin_doc)
+        if not admin:
+            admin_doc["id"] = str(uuid.uuid4())
+            admin_doc["created_at"] = datetime.datetime.utcnow().isoformat()
+            await users_coll.insert_one(admin_doc)
+        else:
+            await users_coll.update_one({"email": settings.DEFAULT_ADMIN_EMAIL}, {"$set": admin_doc})
 
     # 2. Seed Settings
     existing_settings = await settings_coll.find_one({"id": "default_settings"})

@@ -1,7 +1,7 @@
 import logging
 import asyncio
 from typing import Optional, Dict, Any, List
-from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
+from pymongo import MongoClient
 from backend.app.core.config import settings
 
 logger = logging.getLogger(__name__)
@@ -156,16 +156,71 @@ class FallbackAsyncCollection:
         res = await cursor.to_list(None)
         return len(res)
 
+class SyncAsyncCollection:
+    """Async-shaped wrapper around PyMongo for serverless-safe request handling."""
+    def __init__(self, collection):
+        self._collection = collection
+
+    async def find_one(self, filter_query: Dict[str, Any], projection: Optional[Dict[str, Any]] = None) -> Optional[Dict[str, Any]]:
+        return self._collection.find_one(filter_query, projection)
+
+    def find(self, filter_query: Optional[Dict[str, Any]] = None, projection: Optional[Dict[str, Any]] = None):
+        cursor = self._collection.find(filter_query or {}, projection)
+
+        class AsyncCursor:
+            def __init__(self, pymongo_cursor):
+                self._cursor = pymongo_cursor
+
+            def sort(self, key_or_list, direction=1):
+                self._cursor = self._cursor.sort(key_or_list, direction)
+                return self
+
+            def limit(self, count: int):
+                self._cursor = self._cursor.limit(count)
+                return self
+
+            def __aiter__(self):
+                self._iterator = iter(self._cursor)
+                return self
+
+            async def __anext__(self):
+                try:
+                    return next(self._iterator)
+                except StopIteration:
+                    raise StopAsyncIteration
+
+            async def to_list(self, length: Optional[int] = None):
+                if length is None:
+                    return list(self._cursor)
+                return list(self._cursor.limit(length))
+
+        return AsyncCursor(cursor)
+
+    async def insert_one(self, document: Dict[str, Any]):
+        return self._collection.insert_one(document)
+
+    async def update_one(self, filter_query: Dict[str, Any], update_query: Dict[str, Any]):
+        return self._collection.update_one(filter_query, update_query)
+
+    async def delete_one(self, filter_query: Dict[str, Any]):
+        return self._collection.delete_one(filter_query)
+
+    async def count_documents(self, filter_query: Optional[Dict[str, Any]] = None) -> int:
+        return self._collection.count_documents(filter_query or {})
+
 class Database:
-    client: Optional[AsyncIOMotorClient] = None
+    client: Optional[MongoClient] = None
     db: Any = None
     is_fallback: bool = False
     _fallback_collections: Dict[str, FallbackAsyncCollection] = {}
+    _live_collections: Dict[str, SyncAsyncCollection] = {}
     _connect_lock: Optional[asyncio.Lock] = None
 
     def get_collection(self, name: str):
         if not self.is_fallback and self.db is not None:
-            return self.db[name]
+            if name not in self._live_collections:
+                self._live_collections[name] = SyncAsyncCollection(self.db[name])
+            return self._live_collections[name]
         if name not in self._fallback_collections:
             self._fallback_collections[name] = FallbackAsyncCollection(name)
         return self._fallback_collections[name]
@@ -182,14 +237,16 @@ class Database:
 db_manager = Database()
 
 async def connect_to_mongo():
-    logger.info("Connecting to MongoDB at %s...", settings.MONGODB_URL)
+    mongo_target = settings.MONGODB_URL.split("@")[-1] if "@" in settings.MONGODB_URL else settings.MONGODB_URL
+    logger.info("Connecting to MongoDB target %s...", mongo_target)
     try:
-        client = AsyncIOMotorClient(settings.MONGODB_URL, serverSelectionTimeoutMS=2000)
+        client = MongoClient(settings.MONGODB_URL, serverSelectionTimeoutMS=2000)
         # Verify connection
-        await asyncio.wait_for(client.admin.command('ping'), timeout=2.5)
+        client.admin.command('ping')
         db_manager.client = client
         db_manager.db = client[settings.DATABASE_NAME]
         db_manager.is_fallback = False
+        db_manager._live_collections = {}
         logger.info("Successfully connected to live MongoDB (%s)!", settings.DATABASE_NAME)
     except Exception as e:
         logger.warning("Could not connect to live MongoDB daemon (%s). Initializing high-performance asynchronous internal document store.", e)

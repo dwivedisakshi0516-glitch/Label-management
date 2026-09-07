@@ -1,20 +1,34 @@
 import os
-from pydantic_settings import BaseSettings
-from pydantic import field_validator
 from typing import List
+from dotenv import load_dotenv
 
-class Settings(BaseSettings):
+load_dotenv()
+
+def _env_str(name: str, default: str) -> str:
+    value = os.getenv(name)
+    return default if value in ("", None) else value
+
+def _env_int(name: str, default: int) -> int:
+    value = os.getenv(name)
+    if value in ("", None):
+        return default
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return default
+
+class Settings:
     PROJECT_NAME: str = "RIT Label Precision Suite"
     API_V1_STR: str = "/api"
-    SECRET_KEY: str = os.getenv("SECRET_KEY", "rit-secret-key-super-secure-jwt-token-2026-label-precision-suite")
+    SECRET_KEY: str = _env_str("SECRET_KEY", "rit-secret-key-super-secure-jwt-token-2026-label-precision-suite")
     ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7 # 7 days
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = _env_int("ACCESS_TOKEN_EXPIRE_MINUTES", 60 * 24 * 7)
     
-    MONGODB_URL: str = os.getenv("MONGODB_URL", "mongodb://localhost:27017")
-    DATABASE_NAME: str = os.getenv("DATABASE_NAME", "rit_label_db")
+    MONGODB_URL: str = _env_str("MONGODB_URL", "mongodb://localhost:27017")
+    DATABASE_NAME: str = _env_str("DATABASE_NAME", "rit_label_db")
     
-    DEFAULT_ADMIN_EMAIL: str = os.getenv("DEFAULT_ADMIN_EMAIL", "ramaIT@yopmail.com")
-    DEFAULT_ADMIN_PASSWORD: str = os.getenv("DEFAULT_ADMIN_PASSWORD", "")
+    DEFAULT_ADMIN_EMAIL: str = _env_str("DEFAULT_ADMIN_EMAIL", "ramaIT@yopmail.com")
+    DEFAULT_ADMIN_PASSWORD: str = _env_str("DEFAULT_ADMIN_PASSWORD", "")
     
     CORS_ORIGINS: List[str] = [
         "http://localhost:5173",
@@ -23,37 +37,5 @@ class Settings(BaseSettings):
         "http://127.0.0.1:3000",
         "*"
     ]
-
-    @field_validator("SECRET_KEY", mode="before")
-    @classmethod
-    def default_empty_secret_key(cls, value):
-        if value in ("", None):
-            return "rit-secret-key-super-secure-jwt-token-2026-label-precision-suite"
-        return value
-
-    @field_validator("MONGODB_URL", mode="before")
-    @classmethod
-    def default_empty_mongodb_url(cls, value):
-        if value in ("", None):
-            return "mongodb://localhost:27017"
-        return value
-
-    @field_validator("DATABASE_NAME", mode="before")
-    @classmethod
-    def default_empty_database_name(cls, value):
-        if value in ("", None):
-            return "rit_label_db"
-        return value
-
-    @field_validator("ACCESS_TOKEN_EXPIRE_MINUTES", mode="before")
-    @classmethod
-    def default_empty_access_token_expiry(cls, value):
-        if value in ("", None):
-            return 60 * 24 * 7
-        return value
-
-    class Config:
-        env_file = ".env"
-        extra = "allow"
 
 settings = Settings()
