@@ -161,6 +161,7 @@ class Database:
     db: Any = None
     is_fallback: bool = False
     _fallback_collections: Dict[str, FallbackAsyncCollection] = {}
+    _connect_lock: Optional[asyncio.Lock] = None
 
     def get_collection(self, name: str):
         if not self.is_fallback and self.db is not None:
@@ -168,6 +169,15 @@ class Database:
         if name not in self._fallback_collections:
             self._fallback_collections[name] = FallbackAsyncCollection(name)
         return self._fallback_collections[name]
+
+    async def ensure_connected(self):
+        if self.db is not None or self.is_fallback:
+            return
+        if self._connect_lock is None:
+            self._connect_lock = asyncio.Lock()
+        async with self._connect_lock:
+            if self.db is None and not self.is_fallback:
+                await connect_to_mongo()
 
 db_manager = Database()
 

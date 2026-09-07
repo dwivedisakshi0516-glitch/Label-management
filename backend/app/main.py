@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from backend.app.core.config import settings
-from backend.app.database.mongodb import connect_to_mongo, close_mongo_connection
+from backend.app.database.mongodb import connect_to_mongo, close_mongo_connection, db_manager
 from backend.app.services.seed_data import seed_initial_data
 
 from backend.app.routes.auth import router as auth_router
@@ -45,6 +45,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.middleware("http")
+async def ensure_database_connection(request, call_next):
+    await db_manager.ensure_connected()
+    return await call_next(request)
 
 # Include API Routers
 api_prefix = settings.API_V1_STR
