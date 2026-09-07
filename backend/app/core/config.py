@@ -24,6 +24,27 @@ class Settings(BaseSettings):
         "*"
     ]
 
+    @field_validator("SECRET_KEY", mode="before")
+    @classmethod
+    def default_empty_secret_key(cls, value):
+        if value in ("", None):
+            return "rit-secret-key-super-secure-jwt-token-2026-label-precision-suite"
+        return value
+
+    @field_validator("MONGODB_URL", mode="before")
+    @classmethod
+    def default_empty_mongodb_url(cls, value):
+        if value in ("", None):
+            return "mongodb://localhost:27017"
+        return value
+
+    @field_validator("DATABASE_NAME", mode="before")
+    @classmethod
+    def default_empty_database_name(cls, value):
+        if value in ("", None):
+            return "rit_label_db"
+        return value
+
     @field_validator("ACCESS_TOKEN_EXPIRE_MINUTES", mode="before")
     @classmethod
     def default_empty_access_token_expiry(cls, value):
