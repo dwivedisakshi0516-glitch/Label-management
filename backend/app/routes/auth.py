@@ -1,3 +1,5 @@
+import re
+
 from fastapi import APIRouter, HTTPException, Depends, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jose import JWTError, jwt
@@ -39,14 +41,24 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
 
 @router.post("/login", response_model=Token)
 async def login(req: LoginRequest):
+    email = req.email.strip()
+    password = req.password.strip()
+    admin_email = settings.DEFAULT_ADMIN_EMAIL.strip()
+    admin_password = settings.DEFAULT_ADMIN_PASSWORD.strip()
+
     users_coll = db_manager.get_collection("users")
-    user = await users_coll.find_one({"email": req.email})
+    user = await users_coll.find_one({
+        "email": {
+            "$regex": f"^{re.escape(email)}$",
+            "$options": "i"
+        }
+    })
     if not user:
         # Fallback check for demo admin
-        if settings.DEFAULT_ADMIN_PASSWORD and req.email == settings.DEFAULT_ADMIN_EMAIL and req.password == settings.DEFAULT_ADMIN_PASSWORD:
+        if admin_password and email.lower() == admin_email.lower() and password == admin_password:
             user = {
                 "id": "admin-demo-id",
-                "email": settings.DEFAULT_ADMIN_EMAIL,
+                "email": admin_email,
                 "name": "System Administrator",
                 "role": "admin"
             }
@@ -55,8 +67,8 @@ async def login(req: LoginRequest):
     else:
         if user.get("role") == "disabled":
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email or password")
-        if not verify_password(req.password, user.get("password_hash", "")):
-            if not (settings.DEFAULT_ADMIN_PASSWORD and req.email == settings.DEFAULT_ADMIN_EMAIL and req.password == settings.DEFAULT_ADMIN_PASSWORD):
+        if not verify_password(password, user.get("password_hash", "")):
+            if not (admin_password and email.lower() == admin_email.lower() and password == admin_password):
                 raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email or password")
 
     user_id = user.get("id") or str(user.get("_id"))

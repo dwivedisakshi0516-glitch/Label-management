@@ -4,8 +4,26 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+def _load_local_env_value(name: str) -> str:
+    if os.getenv("VERCEL"):
+        return ""
+
+    try:
+        with open(".env", "r", encoding="utf-8") as env_file:
+            for line in env_file:
+                raw_line = line.strip()
+                if not raw_line or raw_line.startswith("#") or "=" not in raw_line:
+                    continue
+                key, value = raw_line.split("=", 1)
+                if key.strip() == name:
+                    return value.strip()
+    except OSError:
+        return ""
+
+    return ""
+
 def _env_str(name: str, default: str) -> str:
-    value = os.getenv(name)
+    value = os.getenv(name) or _load_local_env_value(name)
     if value in ("", None):
         return default
     return value.strip().strip('"').strip("'").removeprefix(">")
