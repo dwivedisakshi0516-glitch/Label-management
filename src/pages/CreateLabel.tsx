@@ -61,6 +61,62 @@ const BUILT_IN_TEMPLATE_KEYS = new Set([
   'pack_contents',
 ]);
 
+const PRINTER_TEMPLATE_FIELDS = [
+  { key: 'importer_name', label: 'Importers Name & Address', enabled: true, font_size: 9, bold: true, alignment: 'left' as const, order: 14, default_value: '' },
+  { key: 'imported_in', label: 'Imported In', enabled: true, font_size: 9, bold: false, alignment: 'left' as const, order: 15, default_value: 'January 2026' },
+  { key: 'customer_care_other_numbers', label: 'Customer Care - Other Numbers', enabled: true, font_size: 9, bold: false, alignment: 'left' as const, order: 16, default_value: '' },
+  { key: 'barcode_text', label: 'Barcode', enabled: true, font_size: 10, bold: true, alignment: 'left' as const, order: 17, default_value: '8C5L5L00145' },
+  { key: 'recycling_information', label: 'Recycling Information', enabled: true, font_size: 8, bold: false, alignment: 'left' as const, order: 18, default_value: 'For Recycling of your product, please visit: www.brother.in' },
+];
+
+const AIO_TEMPLATE_FIELDS = [
+  { key: 'manufactured_for_name', label: 'Manufactured For Name', enabled: true, font_size: 10, bold: true, alignment: 'left' as const, order: 14, default_value: 'HP India Sales Private Ltd.' },
+  { key: 'manufactured_for_address', label: 'Manufactured For Address', enabled: true, font_size: 10, bold: false, alignment: 'left' as const, order: 15, default_value: 'No.24, Kothari Arena, Hosur Main Road, Adugodi, Bangalore, Karnataka - 560030' },
+];
+
+const getPrinterCustomDefaults = () => ({
+  importer_name: 'BROTHER INTERNATIONAL (INDIA) PVT LTD, NOS. 801 AND 802, 8TH FLOOR, ALPHA BUILDING, HIRANANDANI GARDENS, POWAI, MUMBAI - 400 076, MAHARASHTRA',
+  imported_in: 'January 2026',
+  customer_care_other_numbers: '1800 209 8904 (OTHER LANDLINE AND MOBILE CUSTOMERS)',
+  barcode_text: '8C5L5L00145',
+  recycling_information: 'For Recycling of your product, please visit: www.brother.in',
+});
+
+const getAioCustomDefaults = () => ({
+  manufactured_for_name: 'HP India Sales Private Ltd.',
+  manufactured_for_address: 'No.24, Kothari Arena, Hosur Main Road, Adugodi, Bangalore, Karnataka - 560030',
+});
+
+const withPrinterFields = (fields: LabelTemplate['fields'] = [], productNumber = '', genericName = '') => {
+  const isPrinterLabel = productNumber.toUpperCase().includes('DCP-L5660DN') || genericName.toUpperCase().includes('LASER MFC PRINTER');
+  if (!isPrinterLabel) return fields;
+  const existingKeys = new Set(fields.map((field) => field.key));
+  return [
+    ...fields,
+    ...PRINTER_TEMPLATE_FIELDS.filter((field) => !existingKeys.has(field.key)),
+  ];
+};
+
+const withAioFields = (fields: LabelTemplate['fields'] = [], productNumber = '', genericName = '') => {
+  const normalizedGenericName = genericName.toUpperCase().replace(/-/g, ' ');
+  const isAioLabel = productNumber.toUpperCase().includes('D2UP4PT') || normalizedGenericName.includes('ALL IN ONE COMPUTER');
+  if (!isAioLabel) return fields;
+  const existingKeys = new Set(fields.map((field) => field.key));
+  return [
+    ...fields,
+    ...AIO_TEMPLATE_FIELDS.filter((field) => !existingKeys.has(field.key)),
+  ];
+};
+
+const getCategoryLayoutStyle = (categoryName = '', productNumber = '', genericName = '') => {
+  const category = categoryName.toLowerCase();
+  const normalizedGeneric = genericName.toUpperCase().replace(/-/g, ' ');
+  if (category.includes('printer')) return 'printer';
+  if (category.includes('aio') || normalizedGeneric.includes('ALL IN ONE COMPUTER')) return 'aio';
+  if (productNumber.toUpperCase().includes('DCP-L5660DN')) return 'printer';
+  return 'standard';
+};
+
 const normalizeImportKey = (key: string) => key.toLowerCase().replace(/[^a-z0-9]/g, '');
 
 const getImportedValue = (row: ImportedRow, aliases: string[]) => {
@@ -103,6 +159,7 @@ export const CreateLabel: React.FC<CreateLabelProps> = ({
   const [customerCareAddress, setCustomerCareAddress] = useState('');
   const [customerCareEmail, setCustomerCareEmail] = useState('');
   const [customerCarePhone, setCustomerCarePhone] = useState('');
+  const [customerCareTollFree, setCustomerCareTollFree] = useState('');
   const [customerCareWhatsApp, setCustomerCareWhatsApp] = useState('');
   const [customerCareWebsite, setCustomerCareWebsite] = useState('');
   const [warranty, setWarranty] = useState('5 Years');
@@ -171,6 +228,7 @@ export const CreateLabel: React.FC<CreateLabelProps> = ({
         setCustomerCareAddress(s.customerCareAddress || '');
         setCustomerCareEmail(s.customerCareEmail || '');
         setCustomerCarePhone(s.customerCarePhone || '');
+        setCustomerCareTollFree(s.customerCareTollFree || '');
         setCustomerCareWhatsApp(s.customerCareWhatsApp || '');
         setCustomerCareWebsite(s.customerCareWebsite || '');
         setWarranty(s.warranty || '5 Years');
@@ -218,7 +276,8 @@ export const CreateLabel: React.FC<CreateLabelProps> = ({
       const prods = await productsApi.getAll({ category_id: catId });
       setProducts(prods);
       if (prods.length > 0) {
-        const tpl = templates.find((t) => t.id === selectedTemplateId) || templates[0];
+        const tpl = templates.find((t) => t.category_id === catId) || templates.find((t) => t.id === selectedTemplateId) || templates[0];
+        if (tpl) setSelectedTemplateId(tpl.id);
         handleProductSelect(prods[0], cat, tpl);
       } else {
         setGenericName(cat?.default_generic_name || '');
@@ -234,6 +293,8 @@ export const CreateLabel: React.FC<CreateLabelProps> = ({
   };
 
   const handleProductSelect = async (prod: Product, cat?: Category, tpl?: LabelTemplate) => {
+    const isPrinterProduct = Boolean(prod.product_number?.toUpperCase().includes('DCP-L5660DN') || prod.generic_name?.toUpperCase().includes('LASER MFC PRINTER'));
+
     setSelectedProductId(prod.id);
     setProductName(prod.name);
     setBrand(prod.brand || '');
@@ -245,6 +306,16 @@ export const CreateLabel: React.FC<CreateLabelProps> = ({
     setNetQuantity(prod.net_quantity || cat?.default_net_qty || '1 N');
     setWarranty(prod.warranty_name || cat?.default_warranty || '5 Years');
     setPackContents(prod.pack_contents || cat?.default_pack_contents || '');
+    if (isPrinterProduct) {
+      setMonth('January');
+      setYear('2026');
+      setCustomFieldValues((current) => ({
+        ...current,
+        ...Object.fromEntries(
+          Object.entries(getPrinterCustomDefaults()).filter(([key]) => !current[key])
+        ),
+      }));
+    }
 
     const activeTpl = tpl || templates.find((t) => t.id === selectedTemplateId) || templates[0];
     if (activeTpl) {
@@ -274,6 +345,7 @@ export const CreateLabel: React.FC<CreateLabelProps> = ({
           setCustomerCareAddress(cc.complaint_address || '');
           setCustomerCareEmail(cc.email || '');
           setCustomerCarePhone(cc.telephone || '');
+          setCustomerCareTollFree(cc.toll_free_number || '');
           setCustomerCareWhatsApp(cc.whatsapp_number || '');
           setCustomerCareWebsite(cc.website || '');
         }
@@ -345,6 +417,7 @@ export const CreateLabel: React.FC<CreateLabelProps> = ({
     setCustomerCareAddress(getImportedValue(row, ['complaint address', 'customer care address']) || customerCareAddress);
     setCustomerCareEmail(getImportedValue(row, ['email', 'customer care email']) || customerCareEmail);
     setCustomerCarePhone(getImportedValue(row, ['telephone', 'tel', 'phone', 'customer care phone']) || customerCarePhone);
+    setCustomerCareTollFree(getImportedValue(row, ['toll free', 'tollfree', 'other number', 'other numbers', 'customer care other numbers']) || customerCareTollFree);
     setCustomerCareWhatsApp(getImportedValue(row, ['whatsapp', 'whatsapp number']) || customerCareWhatsApp);
     setCustomerCareWebsite(getImportedValue(row, ['website', 'url']) || customerCareWebsite);
     setWarranty(getImportedValue(row, ['warranty', 'warranty coverage']) || warranty);
@@ -370,9 +443,22 @@ export const CreateLabel: React.FC<CreateLabelProps> = ({
     toast.success('Imported row loaded into label fields.');
   };
 
-  const selectedTemplateFields =
-    templates.find((t) => t.id === selectedTemplateId)?.fields || [];
+  const selectedTemplateFields = withAioFields(
+    withPrinterFields(
+      templates.find((t) => t.id === selectedTemplateId)?.fields || [],
+      productNumber,
+      genericName
+    ),
+    productNumber,
+    genericName
+  );
   const customTemplateFields = selectedTemplateFields.filter((field) => !BUILT_IN_TEMPLATE_KEYS.has(field.key));
+  const selectedCategoryName = categories.find((c) => c.id === selectedCategoryId)?.name || '';
+  const selectedTemplate = templates.find((t) => t.id === selectedTemplateId);
+  const layoutStyle =
+    selectedTemplate?.category_id === selectedCategoryId
+      ? selectedTemplate.layout_style || getCategoryLayoutStyle(selectedCategoryName, productNumber, genericName)
+      : getCategoryLayoutStyle(selectedCategoryName, productNumber, genericName);
 
   // Build live active snapshot from state variables
   const activeSnapshot: LabelSnapshot = {
@@ -386,6 +472,7 @@ export const CreateLabel: React.FC<CreateLabelProps> = ({
     customerCareAddress,
     customerCareEmail,
     customerCarePhone,
+    customerCareTollFree,
     customerCareWhatsApp,
     customerCareWebsite,
     warranty,
@@ -401,6 +488,7 @@ export const CreateLabel: React.FC<CreateLabelProps> = ({
     width_mm: Number(widthMm) || settings.default_label_width,
     height_mm: Number(heightMm) || settings.default_label_height,
     fields: selectedTemplateFields,
+    layoutStyle,
   };
 
   const handleSaveLabel = async () => {
@@ -749,14 +837,53 @@ export const CreateLabel: React.FC<CreateLabelProps> = ({
                       />
                     </div>
                     <div>
-                      <label className="block font-semibold text-slate-700 mb-1">Telephone / WhatsApp</label>
+                      <label className="block font-semibold text-slate-700 mb-1">Telephone</label>
                       <input
                         type="text"
-                        value={customerCarePhone || customerCareWhatsApp}
-                        onChange={(e) => {
-                          setCustomerCarePhone(e.target.value);
-                          setCustomerCareWhatsApp(e.target.value);
-                        }}
+                        value={customerCarePhone}
+                        onChange={(e) => setCustomerCarePhone(e.target.value)}
+                        className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-900 focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block font-semibold text-slate-700 mb-1">Customer Care Other Number</label>
+                      <input
+                        type="text"
+                        value={customerCareTollFree}
+                        onChange={(e) => setCustomerCareTollFree(e.target.value)}
+                        className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-900 focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-semibold text-slate-700 mb-1">WhatsApp</label>
+                      <input
+                        type="text"
+                        value={customerCareWhatsApp}
+                        onChange={(e) => setCustomerCareWhatsApp(e.target.value)}
+                        className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-900 focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block font-semibold text-slate-700 mb-1">Email</label>
+                      <input
+                        type="text"
+                        value={customerCareEmail}
+                        onChange={(e) => setCustomerCareEmail(e.target.value)}
+                        className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-900 focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-semibold text-slate-700 mb-1">Website</label>
+                      <input
+                        type="text"
+                        value={customerCareWebsite}
+                        onChange={(e) => setCustomerCareWebsite(e.target.value)}
                         className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-900 focus:ring-2 focus:ring-blue-500"
                       />
                     </div>
@@ -801,8 +928,8 @@ export const CreateLabel: React.FC<CreateLabelProps> = ({
                       {customTemplateFields.map((field) => (
                         <div key={field.key}>
                           <label className="block font-semibold text-slate-700 mb-1">{field.label}</label>
-                          <input
-                            type="text"
+                          <textarea
+                            rows={field.key.includes('address') || field.key.includes('information') ? 3 : 2}
                             value={customFieldValues[field.key] ?? field.default_value ?? ''}
                             onChange={(e) =>
                               setCustomFieldValues({
@@ -810,7 +937,7 @@ export const CreateLabel: React.FC<CreateLabelProps> = ({
                                 [field.key]: e.target.value,
                               })
                             }
-                            className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-900 focus:ring-2 focus:ring-blue-500"
+                            className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-900 focus:ring-2 focus:ring-blue-500 leading-relaxed"
                           />
                         </div>
                       ))}
@@ -935,15 +1062,15 @@ export const CreateLabel: React.FC<CreateLabelProps> = ({
               </button>
             </div>
 
-            <div className="p-6 overflow-y-auto flex-1 flex flex-col items-center justify-center bg-slate-100/80">
-              <div className="shadow-2xl rounded-xs">
+            <div className="p-4 overflow-auto flex-1 flex flex-col items-center justify-start bg-slate-100/80">
+              <div className="shadow-2xl rounded-xs origin-top scale-[0.78]">
                 <PrintableLabel
                   snapshot={activeSnapshot}
                   copies={1}
                   isPrintMode={false}
                 />
               </div>
-              <p className="text-center text-[10px] text-slate-400 mt-4">
+              <p className="text-center text-[10px] text-slate-400 -mt-24">
                 This exact layout will be dispatched to the physical label printer.
               </p>
             </div>
@@ -973,7 +1100,7 @@ export const CreateLabel: React.FC<CreateLabelProps> = ({
       )}
 
       {/* Hidden Standalone Print Container for Browser Print Window */}
-      <div id="printable-label-hidden-root" className="hidden">
+      <div id="printable-label-hidden-root" className="print-hidden-root">
         <PrintableLabel
           snapshot={activeSnapshot}
           copies={copies}

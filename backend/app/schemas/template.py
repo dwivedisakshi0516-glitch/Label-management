@@ -18,6 +18,7 @@ class TemplateBase(BaseModel):
     width_mm: float = Field(100.0, gt=0.0)
     height_mm: float = Field(150.0, gt=0.0)
     fields: List[TemplateField] = []
+    layout_style: Optional[str] = "standard"
     is_default: bool = False
 
 class TemplateCreate(TemplateBase):
@@ -30,6 +31,7 @@ class TemplateUpdate(BaseModel):
     width_mm: Optional[float] = None
     height_mm: Optional[float] = None
     fields: Optional[List[TemplateField]] = None
+    layout_style: Optional[str] = None
     is_default: Optional[bool] = None
 
 class TemplateResponse(TemplateBase):

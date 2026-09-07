@@ -111,6 +111,7 @@ export interface LabelTemplate {
   widthMm?: number;
   heightMm?: number;
   fields?: TemplateField[];
+  layout_style?: 'standard' | 'printer' | 'aio' | string;
   is_default?: boolean;
   version?: string;
   dimensions?: string;
@@ -209,6 +210,31 @@ export interface LabelSnapshot {
   width_mm?: number;
   height_mm?: number;
   fields?: TemplateField[];
+  layoutStyle?: 'standard' | 'printer' | 'aio' | string;
+  labelStyle?: {
+    fontFamily?: string;
+    fontWeight?: number | string;
+    fontSizePt?: number;
+    lineHeight?: number;
+    letterSpacingPx?: number;
+    wordSpacingPx?: number;
+    paddingMm?: number;
+    marginMm?: number;
+    borderWidthPx?: number;
+    borderStyle?: 'solid' | 'dashed' | 'dotted' | 'double' | 'none' | string;
+    borderColor?: string;
+    borderRadiusMm?: number;
+    titleBold?: boolean;
+    titleItalic?: boolean;
+    titleUnderline?: boolean;
+    valueBold?: boolean;
+    valueItalic?: boolean;
+    valueUnderline?: boolean;
+  };
+  customSections?: Array<{
+    heading: string;
+    content: string;
+  }>;
   [key: string]: any;
 }
 

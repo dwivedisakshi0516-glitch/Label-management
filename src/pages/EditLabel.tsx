@@ -18,7 +18,9 @@ import {
   Sparkles,
   Maximize2,
   FolderHeart,
-  X
+  X,
+  Plus,
+  Trash2
 } from 'lucide-react';
 import { Category, Product, LabelTemplate, LabelSnapshot, SavedLabel } from '../types';
 import { categoriesApi, productsApi, templatesApi, labelsApi, manufacturersApi, customerCareApi, warrantiesApi } from '../services/api';
@@ -39,12 +41,48 @@ const CURRENT_YEAR = new Date().getFullYear();
 const YEARS = Array.from({ length: 10 }, (_, i) => (CURRENT_YEAR - 2 + i).toString());
 
 const LABEL_SIZE_PRESETS = [
-  { label: '4 × 6 in (101.6 × 152.4 mm)', widthMm: 101.6, heightMm: 152.4 },
-  { label: '4 × 7 in (101.6 × 177.8 mm)', widthMm: 101.6, heightMm: 177.8 },
-  { label: '3 × 5 in (76.2 × 127 mm)', widthMm: 76.2, heightMm: 127 },
-  { label: '2 × 4 in (50.8 × 101.6 mm)', widthMm: 50.8, heightMm: 101.6 },
-  { label: '100 × 150 mm', widthMm: 100, heightMm: 150 },
+  { label: 'Printer Label (100 x 95 mm)', widthMm: 100, heightMm: 95 },
+  { label: '4 x 6 in (101.6 x 152.4 mm)', widthMm: 101.6, heightMm: 152.4 },
+  { label: '4 x 7 in (101.6 x 177.8 mm)', widthMm: 101.6, heightMm: 177.8 },
+  { label: '3 x 5 in (76.2 x 127 mm)', widthMm: 76.2, heightMm: 127 },
+  { label: '2 x 4 in (50.8 x 101.6 mm)', widthMm: 50.8, heightMm: 101.6 },
+  { label: '100 x 150 mm', widthMm: 100, heightMm: 150 },
   { label: 'Custom Size', widthMm: 0, heightMm: 0 },
+];
+
+const FONT_FAMILY_OPTIONS = [
+  { label: 'Default Category Font', value: '', defaultWeight: '' },
+  { label: 'Sans-serif', value: '-apple-system, BlinkMacSystemFont, "Segoe UI", Arial, Helvetica, sans-serif', defaultWeight: '' },
+  { label: 'Arial', value: 'Arial, Helvetica, sans-serif', defaultWeight: '' },
+  { label: 'Arial Narrow', value: '"Arial Narrow", Arial, sans-serif', defaultWeight: '600' },
+  { label: 'Roboto Condensed', value: '"Roboto Condensed", "Arial Narrow", Arial, sans-serif', defaultWeight: '600' },
+  { label: 'Helvetica Condensed', value: '"Helvetica Neue Condensed", "Helvetica Condensed", "Arial Narrow", Helvetica, Arial, sans-serif', defaultWeight: '600' },
+  { label: 'Liberation Sans Narrow', value: '"Liberation Sans Narrow", "Arial Narrow", Arial, sans-serif', defaultWeight: '600' },
+  { label: 'DIN Condensed', value: '"DIN Condensed", "Roboto Condensed", "Arial Narrow", sans-serif', defaultWeight: '600' },
+  { label: 'Bebas Neue', value: '"Bebas Neue", "DIN Condensed", "Arial Narrow", sans-serif', defaultWeight: '700' },
+  { label: 'Inter', value: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', defaultWeight: '' },
+  { label: 'Roboto', value: 'Roboto, Arial, sans-serif', defaultWeight: '' },
+  { label: 'Times New Roman', value: '"Times New Roman", Times, serif', defaultWeight: '' },
+  { label: 'Courier New', value: '"Courier New", Courier, monospace', defaultWeight: '' },
+  { label: 'Consolas', value: 'Consolas, "Courier New", monospace', defaultWeight: '' },
+];
+
+const FONT_WEIGHT_OPTIONS = [
+  { label: 'Default Category Weight', value: '' },
+  { label: 'Regular 400', value: '400' },
+  { label: 'Medium 500', value: '500' },
+  { label: 'Semi Bold 600', value: '600' },
+  { label: 'Bold 700', value: '700' },
+  { label: 'Extra Bold 800', value: '800' },
+  { label: 'Black 900', value: '900' },
+];
+
+const BORDER_STYLE_OPTIONS = [
+  { label: 'Solid Line', value: 'solid' },
+  { label: 'Dashed Line', value: 'dashed' },
+  { label: 'Dotted Line', value: 'dotted' },
+  { label: 'Double Line', value: 'double' },
+  { label: 'No Border', value: 'none' },
 ];
 
 const BUILT_IN_TEMPLATE_KEYS = new Set([
@@ -62,6 +100,29 @@ const BUILT_IN_TEMPLATE_KEYS = new Set([
   'net_quantity',
   'pack_contents',
 ]);
+
+const getCategoryLayoutStyle = (categoryName = '', productNumber = '', genericName = '') => {
+  const category = categoryName.toLowerCase();
+  const normalizedGeneric = genericName.toUpperCase().replace(/-/g, ' ');
+  if (category.includes('printer')) return 'printer';
+  if (category.includes('aio') || normalizedGeneric.includes('ALL IN ONE COMPUTER')) return 'aio';
+  if (productNumber.toUpperCase().includes('DCP-L5660DN')) return 'printer';
+  return 'standard';
+};
+
+const CATEGORY_CUSTOM_FIELDS = {
+  aio: [
+    { key: 'manufactured_for_name', label: 'Manufactured For Name', enabled: true, font_size: 10, bold: true, alignment: 'left' as const, order: 14, default_value: '' },
+    { key: 'manufactured_for_address', label: 'Manufactured For Address', enabled: true, font_size: 10, bold: false, alignment: 'left' as const, order: 15, default_value: '' },
+  ],
+  printer: [
+    { key: 'importer_name', label: 'Importers Name & Address', enabled: true, font_size: 9, bold: true, alignment: 'left' as const, order: 14, default_value: '' },
+    { key: 'imported_in', label: 'Imported In', enabled: true, font_size: 9, bold: false, alignment: 'left' as const, order: 15, default_value: '' },
+    { key: 'customer_care_other_numbers', label: 'Customer Care - Other Numbers', enabled: true, font_size: 9, bold: false, alignment: 'left' as const, order: 16, default_value: '' },
+    { key: 'barcode_text', label: 'Barcode', enabled: true, font_size: 10, bold: true, alignment: 'left' as const, order: 17, default_value: '' },
+    { key: 'recycling_information', label: 'Recycling Information', enabled: true, font_size: 8, bold: false, alignment: 'left' as const, order: 18, default_value: '' },
+  ],
+};
 
 export const EditLabel: React.FC<EditLabelProps> = ({
   labelToEdit,
@@ -85,6 +146,7 @@ export const EditLabel: React.FC<EditLabelProps> = ({
   const [customerCareAddress, setCustomerCareAddress] = useState('Building 2, Think Campus, Electronic City Phase 1, Bangalore, Karnataka - 560100');
   const [customerCareEmail, setCustomerCareEmail] = useState('in.contact@hp.com');
   const [customerCarePhone, setCustomerCarePhone] = useState('1-800-425-4999');
+  const [customerCareTollFree, setCustomerCareTollFree] = useState('1800-258-7170');
   const [customerCareWhatsApp, setCustomerCareWhatsApp] = useState('+91-8867619377');
   const [customerCareWebsite, setCustomerCareWebsite] = useState('www.hp.com/in');
 
@@ -103,8 +165,27 @@ export const EditLabel: React.FC<EditLabelProps> = ({
   const [heightMm, setHeightMm] = useState<number>(150);
   const [templateFields, setTemplateFields] = useState<LabelTemplate['fields']>([]);
   const [customFieldValues, setCustomFieldValues] = useState<Record<string, string>>({});
+  const [customSections, setCustomSections] = useState<Array<{ heading: string; content: string }>>([]);
+  const [fontFamily, setFontFamily] = useState('');
+  const [fontWeight, setFontWeight] = useState('');
+  const [fontSizePt, setFontSizePt] = useState<number | string>('');
+  const [lineHeight, setLineHeight] = useState<number | string>('');
+  const [letterSpacingPx, setLetterSpacingPx] = useState<number | string>('');
+  const [wordSpacingPx, setWordSpacingPx] = useState<number | string>('');
+  const [paddingMm, setPaddingMm] = useState<number | string>('');
+  const [marginMm, setMarginMm] = useState<number | string>('');
+  const [borderWidthPx, setBorderWidthPx] = useState<number | string>('');
+  const [borderStyle, setBorderStyle] = useState('solid');
+  const [borderColor, setBorderColor] = useState('#000000');
+  const [borderRadiusMm, setBorderRadiusMm] = useState<number | string>('');
+  const [titleBold, setTitleBold] = useState(false);
+  const [titleItalic, setTitleItalic] = useState(false);
+  const [titleUnderline, setTitleUnderline] = useState(false);
+  const [valueBold, setValueBold] = useState(false);
+  const [valueItalic, setValueItalic] = useState(false);
+  const [valueUnderline, setValueUnderline] = useState(false);
 
-  const [activeTab, setActiveTab] = useState<'product' | 'mfg' | 'customercare' | 'contents'>('product');
+  const [activeTab, setActiveTab] = useState<'product' | 'mfg' | 'customercare' | 'contents' | 'style' | 'custom'>('product');
   const [isSaving, setIsSaving] = useState(false);
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
 
@@ -144,6 +225,7 @@ export const EditLabel: React.FC<EditLabelProps> = ({
     setCustomerCareAddress(s.customerCareAddress || '');
     setCustomerCareEmail(s.customerCareEmail || '');
     setCustomerCarePhone(s.customerCarePhone || '');
+    setCustomerCareTollFree(s.customerCareTollFree || '');
     setCustomerCareWhatsApp(s.customerCareWhatsApp || '');
     setCustomerCareWebsite(s.customerCareWebsite || '');
     setWarranty(s.warranty || '5 Years');
@@ -158,15 +240,41 @@ export const EditLabel: React.FC<EditLabelProps> = ({
     setCopies(lbl.copies || 1);
     setWidthMm(s.width_mm || 100);
     setHeightMm(s.height_mm || 150);
-    setTemplateFields(s.fields || []);
+    setFontFamily(s.labelStyle?.fontFamily || '');
+    setFontWeight(s.labelStyle?.fontWeight ? String(s.labelStyle.fontWeight) : '');
+    setFontSizePt(s.labelStyle?.fontSizePt ?? '');
+    setLineHeight(s.labelStyle?.lineHeight ?? '');
+    setLetterSpacingPx(s.labelStyle?.letterSpacingPx ?? '');
+    setWordSpacingPx(s.labelStyle?.wordSpacingPx ?? '');
+    setPaddingMm(s.labelStyle?.paddingMm ?? '');
+    setMarginMm(s.labelStyle?.marginMm ?? '');
+    setBorderWidthPx(s.labelStyle?.borderWidthPx ?? '');
+    setBorderStyle(s.labelStyle?.borderStyle || 'solid');
+    setBorderColor(s.labelStyle?.borderColor || '#000000');
+    setBorderRadiusMm(s.labelStyle?.borderRadiusMm ?? '');
+    setTitleBold(Boolean(s.labelStyle?.titleBold));
+    setTitleItalic(Boolean(s.labelStyle?.titleItalic));
+    setTitleUnderline(Boolean(s.labelStyle?.titleUnderline));
+    setValueBold(Boolean(s.labelStyle?.valueBold));
+    setValueItalic(Boolean(s.labelStyle?.valueItalic));
+    setValueUnderline(Boolean(s.labelStyle?.valueUnderline));
+    const layoutStyle = s.layoutStyle || getCategoryLayoutStyle(lbl.category_name || '', s.productNumber || '', s.genericName || '');
+    const fallbackCustomFields = CATEGORY_CUSTOM_FIELDS[layoutStyle as 'aio' | 'printer'] || [];
+    const snapshotFields = s.fields || [];
+    const snapshotFieldKeys = new Set(snapshotFields.map((field) => field.key));
+    setTemplateFields([
+      ...snapshotFields,
+      ...fallbackCustomFields.filter((field) => !snapshotFieldKeys.has(field.key)),
+    ]);
     setCustomFieldValues(
       Object.keys(s)
-        .filter((key) => !BUILT_IN_TEMPLATE_KEYS.has(key) && !['width_mm', 'height_mm', 'fields'].includes(key))
+        .filter((key) => !BUILT_IN_TEMPLATE_KEYS.has(key) && !['width_mm', 'height_mm', 'fields', 'layoutStyle', 'customSections', 'labelStyle'].includes(key))
         .reduce<Record<string, string>>((values, key) => {
           values[key] = String(s[key] ?? '');
           return values;
         }, {})
     );
+    setCustomSections(Array.isArray(s.customSections) ? s.customSections : []);
   };
 
   const handleSelectExistingLabel = (labelId: string) => {
@@ -175,6 +283,12 @@ export const EditLabel: React.FC<EditLabelProps> = ({
       loadLabelData(found);
       toast.info(`Loaded data for "${found.product_name}"`);
     }
+  };
+
+  const toOptionalNumber = (value: number | string) => {
+    if (value === '' || value === null || value === undefined) return undefined;
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : undefined;
   };
 
   // Build live snapshot from all edited state fields
@@ -189,6 +303,7 @@ export const EditLabel: React.FC<EditLabelProps> = ({
     customerCareAddress,
     customerCareEmail,
     customerCarePhone,
+    customerCareTollFree,
     customerCareWhatsApp,
     customerCareWebsite,
     warranty,
@@ -203,6 +318,28 @@ export const EditLabel: React.FC<EditLabelProps> = ({
     width_mm: Number(widthMm) || 100,
     height_mm: Number(heightMm) || 150,
     fields: templateFields,
+    layoutStyle: getCategoryLayoutStyle(categoryName, productNumber, genericName),
+    labelStyle: {
+      ...(fontFamily ? { fontFamily } : {}),
+      ...(fontWeight ? { fontWeight } : {}),
+      ...(toOptionalNumber(fontSizePt) !== undefined ? { fontSizePt: toOptionalNumber(fontSizePt) } : {}),
+      ...(toOptionalNumber(lineHeight) !== undefined ? { lineHeight: toOptionalNumber(lineHeight) } : {}),
+      ...(toOptionalNumber(letterSpacingPx) !== undefined ? { letterSpacingPx: toOptionalNumber(letterSpacingPx) } : {}),
+      ...(toOptionalNumber(wordSpacingPx) !== undefined ? { wordSpacingPx: toOptionalNumber(wordSpacingPx) } : {}),
+      ...(toOptionalNumber(paddingMm) !== undefined ? { paddingMm: toOptionalNumber(paddingMm) } : {}),
+      ...(toOptionalNumber(marginMm) !== undefined ? { marginMm: toOptionalNumber(marginMm) } : {}),
+      ...(toOptionalNumber(borderWidthPx) !== undefined ? { borderWidthPx: toOptionalNumber(borderWidthPx) } : {}),
+      ...(borderStyle ? { borderStyle } : {}),
+      ...(borderColor ? { borderColor } : {}),
+      ...(toOptionalNumber(borderRadiusMm) !== undefined ? { borderRadiusMm: toOptionalNumber(borderRadiusMm) } : {}),
+      titleBold,
+      titleItalic,
+      titleUnderline,
+      valueBold,
+      valueItalic,
+      valueUnderline,
+    },
+    customSections: customSections.filter((section) => section.heading.trim() || section.content.trim()),
   };
 
   const customTemplateFields = templateFields.filter((field) => !BUILT_IN_TEMPLATE_KEYS.has(field.key));
@@ -220,6 +357,14 @@ export const EditLabel: React.FC<EditLabelProps> = ({
     if (!preset || preset.label === 'Custom Size') return;
     setWidthMm(preset.widthMm);
     setHeightMm(preset.heightMm);
+  };
+
+  const handleFontFamilyChange = (value: string) => {
+    setFontFamily(value);
+    const selectedFont = FONT_FAMILY_OPTIONS.find((option) => option.value === value);
+    if (selectedFont?.defaultWeight !== undefined) {
+      setFontWeight(selectedFont.defaultWeight);
+    }
   };
 
   const handleSaveUpdatedLabel = async () => {
@@ -305,7 +450,7 @@ export const EditLabel: React.FC<EditLabelProps> = ({
             >
               {savedLabelsList.map((l) => (
                 <option key={l.id} value={l.id}>
-                  {l.product_name} ({l.month} {l.year}) - â‚¹{l.mrp}
+                  {l.product_name} ({l.month} {l.year}) - ₹{Number(l.mrp).toLocaleString('en-IN')}
                 </option>
               ))}
             </select>
@@ -325,6 +470,8 @@ export const EditLabel: React.FC<EditLabelProps> = ({
                 ['mfg', '2. Manufacturer Info'],
                 ['customercare', '3. Customer Care & Warranty'],
                 ['contents', '4. Pack Contents & Size'],
+                ['style', '5. Style'],
+                ['custom', '6. Custom Sections'],
               ].map(([tab, label]) => (
                 <button
                   key={tab}
@@ -385,7 +532,7 @@ export const EditLabel: React.FC<EditLabelProps> = ({
                     </select>
                   </div>
                   <div>
-                    <label className="block font-semibold text-slate-600 text-[10px] uppercase mb-1">MRP (â‚¹) <span className="text-rose-500">*</span></label>
+                    <label className="block font-semibold text-slate-600 text-[10px] uppercase mb-1">MRP (₹) <span className="text-rose-500">*</span></label>
                     <input type="number" min="0" step="0.01" value={mrp} onChange={(e) => setMrp(e.target.value)} className="w-full px-2.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 font-mono" />
                   </div>
                   <div>
@@ -399,31 +546,6 @@ export const EditLabel: React.FC<EditLabelProps> = ({
                   <input type="text" value={taxText} onChange={(e) => setTaxText(e.target.value)} placeholder="Incl. of all Taxes" className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:ring-2 focus:ring-blue-500 focus:bg-white focus:outline-hidden" />
                 </div>
 
-                {customTemplateFields.length > 0 && (
-                  <div className="pt-3 border-t border-slate-100 space-y-3">
-                    <h4 className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">
-                      Custom Label Fields
-                    </h4>
-                    {customTemplateFields.map((field) => (
-                      <div key={field.key}>
-                        <label className="block font-semibold text-slate-700 uppercase tracking-wider mb-1">
-                          {field.label}
-                        </label>
-                        <input
-                          type="text"
-                          value={customFieldValues[field.key] ?? field.default_value ?? ''}
-                          onChange={(e) =>
-                            setCustomFieldValues({
-                              ...customFieldValues,
-                              [field.key]: e.target.value,
-                            })
-                          }
-                          className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:ring-2 focus:ring-blue-500 focus:bg-white focus:outline-hidden"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                )}
               </div>
             )}
 
@@ -482,9 +604,13 @@ export const EditLabel: React.FC<EditLabelProps> = ({
                     <input type="text" value={customerCareWhatsApp} onChange={(e) => setCustomerCareWhatsApp(e.target.value)} placeholder="+91-8867619377" className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:ring-2 focus:ring-blue-500 focus:bg-white focus:outline-hidden" />
                   </div>
                   <div>
-                    <label className="block font-semibold text-slate-700 uppercase tracking-wider mb-1">Website URL</label>
-                    <input type="text" value={customerCareWebsite} onChange={(e) => setCustomerCareWebsite(e.target.value)} placeholder="www.hp.com/in" className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:ring-2 focus:ring-blue-500 focus:bg-white focus:outline-hidden" />
+                    <label className="block font-semibold text-slate-700 uppercase tracking-wider mb-1">Other Customer Care Number</label>
+                    <input type="text" value={customerCareTollFree} onChange={(e) => setCustomerCareTollFree(e.target.value)} placeholder="1800-258-7170" className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:ring-2 focus:ring-blue-500 focus:bg-white focus:outline-hidden" />
                   </div>
+                </div>
+                <div>
+                  <label className="block font-semibold text-slate-700 uppercase tracking-wider mb-1">Website URL</label>
+                  <input type="text" value={customerCareWebsite} onChange={(e) => setCustomerCareWebsite(e.target.value)} placeholder="www.hp.com/in" className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:ring-2 focus:ring-blue-500 focus:bg-white focus:outline-hidden" />
                 </div>
               </div>
             )}
@@ -528,6 +654,276 @@ export const EditLabel: React.FC<EditLabelProps> = ({
               </div>
             )}
 
+            {activeTab === 'style' && (
+              <div className="space-y-5 text-xs">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block font-semibold text-slate-700 uppercase tracking-wider mb-1">Font Type / Family</label>
+                    <select value={fontFamily} onChange={(e) => handleFontFamilyChange(e.target.value)} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 font-semibold focus:outline-hidden focus:ring-2 focus:ring-blue-500">
+                      {FONT_FAMILY_OPTIONS.map((option) => (
+                        <option key={option.label} value={option.value}>{option.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block font-semibold text-slate-700 uppercase tracking-wider mb-1">Font Weight</label>
+                    <select value={fontWeight} onChange={(e) => setFontWeight(e.target.value)} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 font-semibold focus:outline-hidden focus:ring-2 focus:ring-blue-500">
+                      {FONT_WEIGHT_OPTIONS.map((option) => (
+                        <option key={option.label} value={option.value}>{option.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-3.5">
+                    <div className="text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-3">Label Title</div>
+                    <div className="grid grid-cols-3 gap-2">
+                      <label className="flex items-center gap-2 px-2.5 py-2 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-700 cursor-pointer">
+                        <input type="checkbox" checked={titleBold} onChange={(e) => setTitleBold(e.target.checked)} className="w-4 h-4 accent-blue-600" />
+                        Bold
+                      </label>
+                      <label className="flex items-center gap-2 px-2.5 py-2 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-700 cursor-pointer">
+                        <input type="checkbox" checked={titleItalic} onChange={(e) => setTitleItalic(e.target.checked)} className="w-4 h-4 accent-blue-600" />
+                        Italic
+                      </label>
+                      <label className="flex items-center gap-2 px-2.5 py-2 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-700 cursor-pointer">
+                        <input type="checkbox" checked={titleUnderline} onChange={(e) => setTitleUnderline(e.target.checked)} className="w-4 h-4 accent-blue-600" />
+                        Underline
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-3.5">
+                    <div className="text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-3">Field Value</div>
+                    <div className="grid grid-cols-3 gap-2">
+                      <label className="flex items-center gap-2 px-2.5 py-2 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-700 cursor-pointer">
+                        <input type="checkbox" checked={valueBold} onChange={(e) => setValueBold(e.target.checked)} className="w-4 h-4 accent-blue-600" />
+                        Bold
+                      </label>
+                      <label className="flex items-center gap-2 px-2.5 py-2 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-700 cursor-pointer">
+                        <input type="checkbox" checked={valueItalic} onChange={(e) => setValueItalic(e.target.checked)} className="w-4 h-4 accent-blue-600" />
+                        Italic
+                      </label>
+                      <label className="flex items-center gap-2 px-2.5 py-2 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-700 cursor-pointer">
+                        <input type="checkbox" checked={valueUnderline} onChange={(e) => setValueUnderline(e.target.checked)} className="w-4 h-4 accent-blue-600" />
+                        Underline
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  <div>
+                    <label className="block font-semibold text-slate-600 text-[10px] uppercase mb-1">Font Size (pt)</label>
+                    <input type="number" min="4" max="40" step="0.1" value={fontSizePt} onChange={(e) => setFontSizePt(e.target.value)} placeholder="Default" className="w-full px-2.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 font-mono" />
+                  </div>
+                  <div>
+                    <label className="block font-semibold text-slate-600 text-[10px] uppercase mb-1">Font Height</label>
+                    <input type="number" min="0.8" max="3" step="0.01" value={lineHeight} onChange={(e) => setLineHeight(e.target.value)} placeholder="Default" className="w-full px-2.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 font-mono" />
+                  </div>
+                  <div>
+                    <label className="block font-semibold text-slate-600 text-[10px] uppercase mb-1">Letter Spacing</label>
+                    <input type="number" min="-2" max="8" step="0.1" value={letterSpacingPx} onChange={(e) => setLetterSpacingPx(e.target.value)} placeholder="0" className="w-full px-2.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 font-mono" />
+                  </div>
+                  <div>
+                    <label className="block font-semibold text-slate-600 text-[10px] uppercase mb-1">Word Spacing</label>
+                    <input type="number" min="-2" max="16" step="0.1" value={wordSpacingPx} onChange={(e) => setWordSpacingPx(e.target.value)} placeholder="0" className="w-full px-2.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 font-mono" />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+                  <div>
+                    <label className="block font-semibold text-slate-600 text-[10px] uppercase mb-1">Padding (mm)</label>
+                    <input type="number" min="0" max="30" step="0.1" value={paddingMm} onChange={(e) => setPaddingMm(e.target.value)} placeholder="Default" className="w-full px-2.5 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-900 font-mono" />
+                  </div>
+                  <div>
+                    <label className="block font-semibold text-slate-600 text-[10px] uppercase mb-1">Margin (mm)</label>
+                    <input type="number" min="0" max="30" step="0.1" value={marginMm} onChange={(e) => setMarginMm(e.target.value)} placeholder="0" className="w-full px-2.5 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-900 font-mono" />
+                  </div>
+                  <div>
+                    <label className="block font-semibold text-slate-600 text-[10px] uppercase mb-1">Border Width</label>
+                    <input type="number" min="0" max="12" step="0.5" value={borderWidthPx} onChange={(e) => setBorderWidthPx(e.target.value)} placeholder="Default" className="w-full px-2.5 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-900 font-mono" />
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label className="block font-semibold text-slate-600 text-[10px] uppercase mb-1">Border Line</label>
+                    <select value={borderStyle} onChange={(e) => setBorderStyle(e.target.value)} className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-blue-500">
+                      {BORDER_STYLE_OPTIONS.map((option) => (
+                        <option key={option.label} value={option.value}>{option.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label className="block font-semibold text-slate-600 text-[10px] uppercase mb-1">Border Color</label>
+                    <div className="flex items-center gap-2">
+                      <input type="color" value={borderColor} onChange={(e) => setBorderColor(e.target.value)} className="h-9 w-12 rounded-lg border border-slate-200 bg-white p-1 cursor-pointer" />
+                      <input type="text" value={borderColor} onChange={(e) => setBorderColor(e.target.value)} className="min-w-0 flex-1 px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-900 font-mono" />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="rounded-xl border border-slate-200 bg-slate-50 p-3.5 space-y-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <div className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">Border Radius</div>
+                      <p className="text-[11px] text-slate-500 mt-0.5">Control the label corner roundness.</p>
+                    </div>
+                    <div className="text-[11px] font-mono text-slate-500">
+                      {borderRadiusMm === '' ? 'Default' : `${borderRadiusMm} mm`}
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                    {[
+                      ['0', 'Square'],
+                      ['1.5', 'Small'],
+                      ['3', 'Medium'],
+                      ['5', 'Rounded'],
+                      ['', 'Default'],
+                    ].map(([value, label]) => (
+                      <button
+                        key={label}
+                        type="button"
+                        onClick={() => setBorderRadiusMm(value)}
+                        className={`px-2.5 py-2 rounded-lg border text-xs font-semibold transition cursor-pointer ${
+                          String(borderRadiusMm) === value
+                            ? 'bg-blue-600 border-blue-600 text-white'
+                            : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100'
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                  <div>
+                    <label className="block font-semibold text-slate-600 text-[10px] uppercase mb-1">Custom Radius (mm)</label>
+                    <input type="number" min="0" max="20" step="0.1" value={borderRadiusMm} onChange={(e) => setBorderRadiusMm(e.target.value)} placeholder="Default" className="w-full px-2.5 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-900 font-mono" />
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFontFamily('');
+                    setFontWeight('');
+                    setFontSizePt('');
+                    setLineHeight('');
+                    setLetterSpacingPx('');
+                    setWordSpacingPx('');
+                    setPaddingMm('');
+                    setMarginMm('');
+                    setBorderWidthPx('');
+                    setBorderStyle('solid');
+                    setBorderColor('#000000');
+                    setBorderRadiusMm('');
+                    setTitleBold(false);
+                    setTitleItalic(false);
+                    setTitleUnderline(false);
+                    setValueBold(false);
+                    setValueItalic(false);
+                    setValueUnderline(false);
+                  }}
+                  className="inline-flex items-center gap-2 px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition cursor-pointer"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  <span>Reset Style</span>
+                </button>
+              </div>
+            )}
+
+            {activeTab === 'custom' && (
+              <div className="space-y-4 text-xs">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <h3 className="text-sm font-bold text-slate-900">Custom</h3>
+                    <p className="text-xs text-slate-500">Add extra label headings and field content for this label.</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setCustomSections([...customSections, { heading: '', content: '' }])}
+                    className="inline-flex items-center gap-1.5 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold transition cursor-pointer"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Add Section</span>
+                  </button>
+                </div>
+
+                {customTemplateFields.length > 0 ? (
+                  customTemplateFields.map((field) => (
+                    <div key={field.key}>
+                      <label className="block font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                        {field.label}
+                      </label>
+                      <textarea
+                        rows={field.key.includes('address') || field.key.includes('information') ? 3 : 2}
+                        value={customFieldValues[field.key] ?? field.default_value ?? ''}
+                        onChange={(e) =>
+                          setCustomFieldValues({
+                            ...customFieldValues,
+                            [field.key]: e.target.value,
+                          })
+                        }
+                        className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:ring-2 focus:ring-blue-500 focus:bg-white focus:outline-hidden leading-relaxed"
+                      />
+                    </div>
+                  ))
+                ) : (
+                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-500">
+                    No custom sections are defined for this label template.
+                  </div>
+                )}
+
+                {customSections.map((section, index) => (
+                  <div key={index} className="rounded-xl border border-slate-200 bg-slate-50 p-4 space-y-3">
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                        Custom Section {index + 1}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setCustomSections(customSections.filter((_, sectionIndex) => sectionIndex !== index))}
+                        className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer"
+                        title="Remove custom section"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                    <div>
+                      <label className="block font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                        Label Heading
+                      </label>
+                      <input
+                        type="text"
+                        value={section.heading}
+                        onChange={(e) =>
+                          setCustomSections(customSections.map((item, itemIndex) =>
+                            itemIndex === index ? { ...item, heading: e.target.value } : item
+                          ))
+                        }
+                        placeholder="e.g. Serial No."
+                        className="w-full px-3.5 py-2 bg-white border border-slate-200 rounded-xl text-sm text-slate-900 focus:ring-2 focus:ring-blue-500 focus:bg-white focus:outline-hidden"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                        Field Content
+                      </label>
+                      <textarea
+                        rows={3}
+                        value={section.content}
+                        onChange={(e) =>
+                          setCustomSections(customSections.map((item, itemIndex) =>
+                            itemIndex === index ? { ...item, content: e.target.value } : item
+                          ))
+                        }
+                        placeholder="Enter content to print under this heading"
+                        className="w-full px-3.5 py-2 bg-white border border-slate-200 rounded-xl text-sm text-slate-900 focus:ring-2 focus:ring-blue-500 focus:bg-white focus:outline-hidden leading-relaxed"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
             <div className="flex flex-wrap items-center gap-3 pt-4 border-t border-slate-100">
               <button type="button" onClick={handleSaveUpdatedLabel} disabled={isSaving} className="flex-1 py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs sm:text-sm rounded-xl shadow-md shadow-blue-500/20 transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50">
                 {isSaving ? (
@@ -565,7 +961,7 @@ export const EditLabel: React.FC<EditLabelProps> = ({
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-[10px] text-slate-500 font-mono">
-                  {widthMm}mm Ã— {heightMm}mm
+                  {widthMm}mm × {heightMm}mm
                 </span>
                 <button type="button" onClick={() => setIsPreviewModalOpen(true)} className="p-1 text-slate-500 hover:text-blue-600 rounded-md hover:bg-slate-200 transition" title="Expand Fullscreen">
                   <Maximize2 className="w-3.5 h-3.5" />
@@ -599,7 +995,7 @@ export const EditLabel: React.FC<EditLabelProps> = ({
                     {productName || 'Customized Print Layout'}
                   </h3>
                   <p className="text-[11px] text-slate-500 font-mono">
-                    Print Layout ({widthMm}Ã—{heightMm} mm) â€¢ Copies: {copies}
+                    Print Layout ({widthMm}×{heightMm} mm) • Copies: {copies}
                   </p>
                 </div>
               </div>
@@ -608,11 +1004,11 @@ export const EditLabel: React.FC<EditLabelProps> = ({
               </button>
             </div>
 
-            <div className="p-6 overflow-y-auto flex-1 flex flex-col items-center justify-center bg-slate-100/80">
-              <div className="shadow-2xl rounded-xs">
+            <div className="p-4 overflow-auto flex-1 flex flex-col items-center justify-start bg-slate-100/80">
+              <div className="shadow-2xl rounded-xs origin-top scale-[0.78]">
                 <PrintableLabel snapshot={currentSnapshot} copies={1} isPrintMode={false} />
               </div>
-              <p className="text-center text-[10px] text-slate-400 mt-4">
+              <p className="text-center text-[10px] text-slate-400 -mt-24">
                 This exact layout will be dispatched to the physical label printer.
               </p>
             </div>
@@ -638,7 +1034,7 @@ export const EditLabel: React.FC<EditLabelProps> = ({
         </div>
       )}
 
-      <div id="printable-label-hidden-root" className="hidden">
+      <div id="printable-label-hidden-root" className="print-hidden-root">
         <PrintableLabel snapshot={currentSnapshot} copies={copies} isPrintMode={true} />
       </div>
     </div>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
 import { SettingsProvider, useSettings } from './context/SettingsContext';
@@ -20,14 +20,42 @@ import { Settings } from './pages/Settings';
 import { NavigationPath, SavedLabel } from './types';
 import { ImportedRow } from './components/import/ImportedFileTable';
 
+const NAVIGATION_PATHS: NavigationPath[] = [
+  'dashboard',
+  'categories',
+  'products',
+  'manufacturers',
+  'customer-care',
+  'warranty',
+  'templates',
+  'create-label',
+  'import-labels',
+  'edit-label',
+  'saved-labels',
+  'settings',
+  'login',
+  'template-library',
+  'manufacturers-plants',
+  'line-settings',
+];
+
+const getInitialPath = (): NavigationPath => {
+  const savedPath = localStorage.getItem('rit_current_path') as NavigationPath | null;
+  return savedPath && NAVIGATION_PATHS.includes(savedPath) ? savedPath : 'dashboard';
+};
+
 const AppLayout: React.FC = () => {
   const { currentUser, isLoading } = useAuth();
   const { settings } = useSettings();
-  const [currentPath, setCurrentPath] = useState<NavigationPath>('dashboard');
+  const [currentPath, setCurrentPath] = useState<NavigationPath>(getInitialPath);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [duplicateTarget, setDuplicateTarget] = useState<SavedLabel | null>(null);
   const [editTarget, setEditTarget] = useState<SavedLabel | null>(null);
   const [importedRowTarget, setImportedRowTarget] = useState<ImportedRow | null>(null);
+
+  useEffect(() => {
+    localStorage.setItem('rit_current_path', currentPath);
+  }, [currentPath]);
 
   if (isLoading) {
     return (

@@ -85,20 +85,20 @@ async def seed_initial_data():
     manufacturers_data = [
         {
             "name": "Flextronics Technologies India Pvt. Ltd.",
-            "address": "Plot No. 1, Industrial Park, Sandur Road, Sriperumbudur",
+            "address": "Plot No.3, PhaseII SIPCOT Industrial Park, DTA Sandavellur C Village, Sriperumbudur Taluk",
             "city": "Kanchipuram",
             "state": "Tamil Nadu",
-            "pincode": "602105",
+            "pincode": "602106",
             "country": "India",
             "phone": "+91-44-67123000",
             "email": "contact.india@flextronics.com"
         },
         {
             "name": "Brother Industries (Vietnam) Ltd.",
-            "address": "Phuc Dien Industrial Zone, Cam Giay District",
-            "city": "Hai Duong",
-            "state": "Hai Duong",
-            "pincode": "170000",
+            "address": "Phuc Dien Industrial Zone, Mao Dien Commune",
+            "city": "Hai Phong City",
+            "state": "",
+            "pincode": "174700",
             "country": "Vietnam",
             "phone": "+84-220-3777-100",
             "email": "info@brother.vn"
@@ -154,12 +154,12 @@ async def seed_initial_data():
         },
         {
             "profile_name": "Brother India Support Helpdesk",
-            "complaint_text": "Customer Care Division",
-            "complaint_address": "Unit No 401 & 402, 4th Floor, Alpha Building, Hiranandani Gardens, Powai, Mumbai - 400076",
+            "complaint_text": "Customer Care Executive",
+            "complaint_address": "BROTHER INTERNATIONAL (INDIA) PVT LTD, NOS. 801 AND 802, 8TH FLOOR, ALPHA BUILDING, HIRANANDANI GARDENS, POWAI, MUMBAI - 400 076, MAHARASHTRA",
             "email": "customercare@brother.in",
-            "telephone": "1-800-222-422",
-            "toll_free_number": "1800-209-8904",
-            "whatsapp_number": "+91-9967554433",
+            "telephone": "1800 222 422 (ALL BSNL & MTNL CUSTOMERS)",
+            "toll_free_number": "1800 209 8904 (OTHER LANDLINE AND MOBILE CUSTOMERS)",
+            "whatsapp_number": "",
             "website": "www.brother.in"
         },
         {
@@ -214,19 +214,19 @@ async def seed_initial_data():
             "name": "AIO Computer",
             "description": "Space-saving All-In-One Desktop systems",
             "default_warranty": "5 Years",
-            "default_generic_name": "ALL-IN-ONE COMPUTER",
+            "default_generic_name": "ALL IN ONE COMPUTER",
             "default_country_of_origin": "India",
             "default_net_qty": "1 N",
-            "default_pack_contents": "All-In-One Computer 1 N, Power Adapter 1 N, Keyboard 1 N, Mouse 1 N"
+            "default_pack_contents": "60.45 CM ALL IN ONE COMPUTER 1N,\nCENTRAL PROCESSING UNIT 1N,\nCABLE SET 1N,\nTOWERSTAND 1N,KEYBOARD 1N,MOUSE 1N"
         },
         {
             "name": "Printer",
             "description": "Single-function and Multi-function Laser Printers",
             "default_warranty": "5 Years",
-            "default_generic_name": "LASER PRINTER",
+            "default_generic_name": "LASER MFC PRINTER",
             "default_country_of_origin": "Vietnam",
-            "default_net_qty": "1 N",
-            "default_pack_contents": "Laser Printer 1 N, Power Cable 1 N, USB Cable 1 N, Toner Cartridge 1 N"
+            "default_net_qty": "1N",
+            "default_pack_contents": "1N Printer, 1N Power Cable, 1N Toner, 1N Drum, 1N Guide"
         },
         {
             "name": "Scanner",
@@ -294,16 +294,16 @@ async def seed_initial_data():
             "name": "HP ProStudio 4 AIO G1i",
             "category_name": "AIO Computer",
             "brand": "HP",
-            "product_number": "HP-PS4-AIO-G1I",
+            "product_number": "D2UP4PT#ACJ",
             "mfg_name": "Flextronics Technologies India Pvt. Ltd.",
             "cc_name": "HP India Customer Care",
             "warranty_name": "5 Years",
             "country_of_origin": "India",
-            "generic_name": "ALL-IN-ONE COMPUTER",
+            "generic_name": "ALL IN ONE COMPUTER",
             "net_quantity": "1 N",
-            "default_mrp": 128500.0,
-            "tax_text": "Incl. of all Taxes",
-            "pack_contents": "All-In-One Computer 1 N, Power Adapter 1 N, Keyboard 1 N, Wireless Mouse 1 N",
+            "default_mrp": 90000.0,
+            "tax_text": "Incl.of all Taxes",
+            "pack_contents": "60.45 CM ALL IN ONE COMPUTER 1N,\nCENTRAL PROCESSING UNIT 1N,\nCABLE SET 1N,\nTOWERSTAND 1N,KEYBOARD 1N,MOUSE 1N",
             "status": "Active"
         },
         {
@@ -326,16 +326,16 @@ async def seed_initial_data():
             "name": "Brother DCP-L5660DN",
             "category_name": "Printer",
             "brand": "Brother",
-            "product_number": "BR-DCPL5660DN",
+            "product_number": "DCP-L5660DN",
             "mfg_name": "Brother Industries (Vietnam) Ltd.",
             "cc_name": "Brother India Support Helpdesk",
             "warranty_name": "5 Years",
             "country_of_origin": "Vietnam",
-            "generic_name": "MONO MULTI-FUNCTION PRINTER",
-            "net_quantity": "1 N",
-            "default_mrp": 46990.0,
-            "tax_text": "Incl. of all Taxes",
-            "pack_contents": "Multi-Function Laser Printer 1 N, Toner Cartridge 1 N, Drum Unit 1 N, Power Cord 1 N, USB Cable 1 N",
+            "generic_name": "LASER MFC PRINTER",
+            "net_quantity": "1N",
+            "default_mrp": 59990.0,
+            "tax_text": "Inclusive of all Taxes",
+            "pack_contents": "1N Printer, 1N Power Cable, 1N Toner, 1N Drum, 1N Guide",
             "status": "Active"
         },
         {
@@ -438,23 +438,23 @@ async def seed_initial_data():
             await products_coll.insert_one(p_doc)
 
     # 8. Seed Default Template
+    fields = [
+        {"key": "manufactured_by", "label": "Manufactured By", "enabled": True, "font_size": 11, "bold": True, "alignment": "left", "order": 1},
+        {"key": "manufactured_for", "label": "Manufactured For", "enabled": True, "font_size": 11, "bold": True, "alignment": "left", "order": 2},
+        {"key": "for_complaints", "label": "For Complaints", "enabled": True, "font_size": 11, "bold": True, "alignment": "left", "order": 3},
+        {"key": "email", "label": "Email", "enabled": True, "font_size": 10, "bold": False, "alignment": "left", "order": 4},
+        {"key": "telephone", "label": "Tel", "enabled": True, "font_size": 10, "bold": False, "alignment": "left", "order": 5},
+        {"key": "whatsapp", "label": "WhatsApp", "enabled": True, "font_size": 10, "bold": False, "alignment": "left", "order": 6},
+        {"key": "month_year", "label": "Month & Year of Manufacture", "enabled": True, "font_size": 11, "bold": True, "alignment": "left", "order": 7},
+        {"key": "mrp", "label": "MRP (Incl. of all Taxes)", "enabled": True, "font_size": 13, "bold": True, "alignment": "left", "order": 8},
+        {"key": "product_number", "label": "Product No.", "enabled": True, "font_size": 11, "bold": True, "alignment": "left", "order": 9},
+        {"key": "country_of_origin", "label": "Country of Origin", "enabled": True, "font_size": 10, "bold": False, "alignment": "left", "order": 10},
+        {"key": "generic_name", "label": "Generic Name", "enabled": True, "font_size": 11, "bold": True, "alignment": "left", "order": 11},
+        {"key": "net_quantity", "label": "Net Qty", "enabled": True, "font_size": 10, "bold": False, "alignment": "left", "order": 12},
+        {"key": "pack_contents", "label": "Pack Contents", "enabled": True, "font_size": 10, "bold": False, "alignment": "left", "order": 13}
+    ]
     default_template = await templates_coll.find_one({"name": "Standard Compliance Label (100x150mm)"})
     if not default_template:
-        fields = [
-            {"key": "manufactured_by", "label": "Manufactured By", "enabled": True, "font_size": 11, "bold": True, "alignment": "left", "order": 1},
-            {"key": "manufactured_for", "label": "Manufactured For", "enabled": True, "font_size": 11, "bold": True, "alignment": "left", "order": 2},
-            {"key": "for_complaints", "label": "For Complaints", "enabled": True, "font_size": 11, "bold": True, "alignment": "left", "order": 3},
-            {"key": "email", "label": "Email", "enabled": True, "font_size": 10, "bold": False, "alignment": "left", "order": 4},
-            {"key": "telephone", "label": "Tel", "enabled": True, "font_size": 10, "bold": False, "alignment": "left", "order": 5},
-            {"key": "whatsapp", "label": "WhatsApp", "enabled": True, "font_size": 10, "bold": False, "alignment": "left", "order": 6},
-            {"key": "month_year", "label": "Month & Year of Manufacture", "enabled": True, "font_size": 11, "bold": True, "alignment": "left", "order": 7},
-            {"key": "mrp", "label": "MRP (Incl. of all Taxes)", "enabled": True, "font_size": 13, "bold": True, "alignment": "left", "order": 8},
-            {"key": "product_number", "label": "Product No.", "enabled": True, "font_size": 11, "bold": True, "alignment": "left", "order": 9},
-            {"key": "country_of_origin", "label": "Country of Origin", "enabled": True, "font_size": 10, "bold": False, "alignment": "left", "order": 10},
-            {"key": "generic_name", "label": "Generic Name", "enabled": True, "font_size": 11, "bold": True, "alignment": "left", "order": 11},
-            {"key": "net_quantity", "label": "Net Qty", "enabled": True, "font_size": 10, "bold": False, "alignment": "left", "order": 12},
-            {"key": "pack_contents", "label": "Pack Contents", "enabled": True, "font_size": 10, "bold": False, "alignment": "left", "order": 13}
-        ]
         t_doc = {
             "id": str(uuid.uuid4()),
             "name": "Standard Compliance Label (100x150mm)",
@@ -463,8 +463,214 @@ async def seed_initial_data():
             "width_mm": 100.0,
             "height_mm": 150.0,
             "fields": fields,
+            "layout_style": "standard",
             "is_default": True,
             "created_at": datetime.datetime.utcnow().isoformat(),
             "updated_at": datetime.datetime.utcnow().isoformat()
         }
         await templates_coll.insert_one(t_doc)
+
+    printer_template = await templates_coll.find_one({"name": "Printer Compliance Label (100x95mm)"})
+    if not printer_template:
+        legacy_printer_template = await templates_coll.find_one({
+            "name": {"$in": ["Printer Compliance Label (100x60mm)", "Printer Compliance Label (100x80mm)", "Printer Compliance Label (100x150mm)"]}
+        })
+        if legacy_printer_template:
+            await templates_coll.update_one(
+                {"id": legacy_printer_template["id"]},
+                {"$set": {
+                    "name": "Printer Compliance Label (100x95mm)",
+                    "width_mm": 100.0,
+                    "height_mm": 95.0,
+                    "layout_style": "printer",
+                    "updated_at": datetime.datetime.utcnow().isoformat()
+                }}
+            )
+            printer_template = await templates_coll.find_one({"name": "Printer Compliance Label (100x95mm)"})
+    if not printer_template:
+        printer_fields = fields + [
+            {"key": "importer_name", "label": "Importers Name & Address", "enabled": True, "font_size": 9, "bold": True, "alignment": "left", "order": 14, "default_value": ""},
+            {"key": "imported_in", "label": "Imported In", "enabled": True, "font_size": 9, "bold": False, "alignment": "left", "order": 15, "default_value": ""},
+            {"key": "customer_care_other_numbers", "label": "Customer Care - Other Numbers", "enabled": True, "font_size": 9, "bold": False, "alignment": "left", "order": 16, "default_value": ""},
+            {"key": "barcode_text", "label": "Barcode", "enabled": True, "font_size": 10, "bold": True, "alignment": "left", "order": 17, "default_value": ""},
+            {"key": "recycling_information", "label": "Recycling Information", "enabled": True, "font_size": 8, "bold": False, "alignment": "left", "order": 18, "default_value": ""}
+        ]
+        await templates_coll.insert_one({
+            "id": str(uuid.uuid4()),
+            "name": "Printer Compliance Label (100x95mm)",
+            "category_id": cat_map.get("Printer", ""),
+            "category_name": "Printer",
+            "width_mm": 100.0,
+            "height_mm": 95.0,
+            "fields": printer_fields,
+            "layout_style": "printer",
+            "is_default": False,
+            "created_at": datetime.datetime.utcnow().isoformat(),
+            "updated_at": datetime.datetime.utcnow().isoformat()
+        })
+        printer_template = await templates_coll.find_one({"name": "Printer Compliance Label (100x95mm)"})
+
+    aio_template = await templates_coll.find_one({"name": "AIO Computer Tall Label (65x150mm)"})
+    if not aio_template:
+        aio_fields = fields + [
+            {"key": "manufactured_for_name", "label": "Manufactured For Name", "enabled": True, "font_size": 10, "bold": True, "alignment": "left", "order": 14, "default_value": ""},
+            {"key": "manufactured_for_address", "label": "Manufactured For Address", "enabled": True, "font_size": 10, "bold": False, "alignment": "left", "order": 15, "default_value": ""}
+        ]
+        await templates_coll.insert_one({
+            "id": str(uuid.uuid4()),
+            "name": "AIO Computer Tall Label (65x150mm)",
+            "category_id": cat_map.get("AIO Computer", ""),
+            "category_name": "AIO Computer",
+            "width_mm": 65.0,
+            "height_mm": 150.0,
+            "fields": aio_fields,
+            "layout_style": "aio",
+            "is_default": False,
+            "created_at": datetime.datetime.utcnow().isoformat(),
+            "updated_at": datetime.datetime.utcnow().isoformat()
+        })
+        aio_template = await templates_coll.find_one({"name": "AIO Computer Tall Label (65x150mm)"})
+
+    # 9. Seed Brother Printer Label
+    brother_product = await products_coll.find_one({"name": "Brother DCP-L5660DN"})
+    brother_category_id = cat_map.get("Printer", "")
+    brother_template = printer_template or await templates_coll.find_one({"name": "Printer Compliance Label (100x95mm)"})
+    existing_brother_label = await db_manager.get_collection("labels").find_one({
+        "product_name": "Brother DCP-L5660DN",
+        "month": "January",
+        "year": "2026"
+    })
+    if existing_brother_label:
+        await db_manager.get_collection("labels").update_one(
+            {"id": existing_brother_label["id"]},
+            {"$set": {
+                "template_id": brother_template.get("id", "") if brother_template else existing_brother_label.get("template_id", ""),
+                "snapshot.width_mm": 100.0,
+                "snapshot.height_mm": 95.0,
+                "snapshot.layoutStyle": "printer",
+                "snapshot.currency": "₹",
+                "updated_at": datetime.datetime.utcnow().isoformat()
+            }}
+        )
+    if brother_product and not existing_brother_label:
+        now = datetime.datetime.utcnow().isoformat()
+        template_fields = brother_template.get("fields", []) if brother_template else []
+        template_field_keys = {field.get("key") for field in template_fields}
+        extra_printer_fields = [
+            {"key": "importer_name", "label": "Imported By", "enabled": True, "font_size": 9, "bold": True, "alignment": "left", "order": 14, "default_value": ""},
+            {"key": "imported_in", "label": "Imported In", "enabled": True, "font_size": 9, "bold": False, "alignment": "left", "order": 15, "default_value": ""},
+            {"key": "customer_care_other_numbers", "label": "Customer Care - Other Numbers", "enabled": True, "font_size": 9, "bold": False, "alignment": "left", "order": 16, "default_value": ""},
+            {"key": "website", "label": "Website", "enabled": True, "font_size": 9, "bold": False, "alignment": "left", "order": 17, "default_value": ""},
+            {"key": "barcode_text", "label": "Barcode", "enabled": True, "font_size": 10, "bold": True, "alignment": "left", "order": 18, "default_value": ""},
+            {"key": "recycling_information", "label": "Recycling Information", "enabled": True, "font_size": 8, "bold": False, "alignment": "left", "order": 19, "default_value": ""}
+        ]
+        label_fields = template_fields + [
+            field for field in extra_printer_fields
+            if field["key"] not in template_field_keys
+        ]
+        await db_manager.get_collection("labels").insert_one({
+            "id": str(uuid.uuid4()),
+            "category_id": brother_product.get("category_id") or brother_category_id,
+            "category_name": "Printer",
+            "product_id": brother_product.get("id") or str(brother_product.get("_id")),
+            "product_name": "Brother DCP-L5660DN",
+            "template_id": brother_template.get("id", "") if brother_template else "",
+            "month": "January",
+            "year": "2026",
+            "mrp": 59990.0,
+            "copies": 1,
+            "snapshot": {
+                "productName": "Brother DCP-L5660DN",
+                "brand": "Brother",
+                "productNumber": "DCP-L5660DN",
+                "manufacturerName": "BROTHER INDUSTRIES (VIETNAM) LTD.",
+                "manufacturerAddress": "Phuc Dien Industrial Zone, Mao Dien Commune, Hai Phong City, Viet Nam - 174700",
+                "customerCareProfile": "Customer Care Executive",
+                "customerCareAddress": "Same as Importer Above",
+                "customerCareEmail": "CUSTOMERCARE@BROTHER.IN",
+                "customerCarePhone": "1800 222 422 (ALL BSNL & MTNL CUSTOMERS)",
+                "customerCareTollFree": "1800 209 8904 (OTHER LANDLINE AND MOBILE CUSTOMERS)",
+                "customerCareWhatsApp": "",
+                "customerCareWebsite": "WWW.BROTHER.IN",
+                "countryOfOrigin": "Vietnam",
+                "genericName": "LASER MFC PRINTER",
+                "netQuantity": "1N",
+                "mrp": 59990.0,
+                "currency": "₹",
+                "taxText": "Inclusive of all Taxes",
+                "packContents": "1N Printer, 1N Power Cable, 1N Toner, 1N Drum, 1N Guide",
+                "month": "January",
+                "year": "2026",
+                "width_mm": 100.0,
+                "height_mm": 95.0,
+                "fields": label_fields,
+                "layoutStyle": "printer",
+                "importer_name": "BROTHER INTERNATIONAL (INDIA) PVT LTD, NOS. 801 AND 802, 8TH FLOOR, ALPHA BUILDING, HIRANANDANI GARDENS, POWAI, MUMBAI - 400 076, MAHARASHTRA",
+                "imported_in": "January 2026",
+                "customer_care_other_numbers": "1800 209 8904 (OTHER LANDLINE AND MOBILE CUSTOMERS)",
+                "website": "WWW.BROTHER.IN",
+                "barcode_text": "8C5L5L00145",
+                "recycling_information": "For Recycling of your product, please visit: www.brother.in"
+            },
+            "created_by": "Admin",
+            "created_at": now
+        })
+
+    # 10. Seed HP AIO Label
+    aio_product = await products_coll.find_one({"name": "HP ProStudio 4 AIO G1i"})
+    aio_category_id = cat_map.get("AIO Computer", "")
+    existing_aio_label = await db_manager.get_collection("labels").find_one({
+        "product_name": "HP ProStudio 4 AIO G1i",
+        "month": "Feb",
+        "year": "2026"
+    })
+    if aio_product and not existing_aio_label:
+        now = datetime.datetime.utcnow().isoformat()
+        aio_fields = aio_template.get("fields", []) if aio_template else [
+            {"key": "manufactured_for_name", "label": "Manufactured For Name", "enabled": True, "font_size": 10, "bold": True, "alignment": "left", "order": 14, "default_value": ""},
+            {"key": "manufactured_for_address", "label": "Manufactured For Address", "enabled": True, "font_size": 10, "bold": False, "alignment": "left", "order": 15, "default_value": ""}
+        ]
+        await db_manager.get_collection("labels").insert_one({
+            "id": str(uuid.uuid4()),
+            "category_id": aio_product.get("category_id") or aio_category_id,
+            "category_name": "AIO Computer",
+            "product_id": aio_product.get("id") or str(aio_product.get("_id")),
+            "product_name": "HP ProStudio 4 AIO G1i",
+            "template_id": aio_template.get("id", "") if aio_template else "",
+            "month": "Feb",
+            "year": "2026",
+            "mrp": 90000.0,
+            "copies": 1,
+            "snapshot": {
+                "productName": "HP ProStudio 4 AIO G1i",
+                "brand": "HP",
+                "productNumber": "D2UP4PT#ACJ",
+                "manufacturerName": "Flextronics Technologies India Pvt. Ltd.",
+                "manufacturerAddress": "Plot No.3, PhaseII SIPCOT Industrial Park, DTA Sandavellur C Village, Sriperumbudur Taluk Kanchipuram Tamilnadu - 602106",
+                "customerCareProfile": "Customer Care",
+                "customerCareAddress": "Same address as above",
+                "customerCareEmail": "in.contact@hp.com",
+                "customerCarePhone": "1-800-258-7170",
+                "customerCareTollFree": "1-800-258-7170",
+                "customerCareWhatsApp": "+ 91 22 6101 4560",
+                "customerCareWebsite": "",
+                "warranty": "5 Years",
+                "countryOfOrigin": "India",
+                "genericName": "ALL IN ONE COMPUTER",
+                "netQuantity": "1 N",
+                "mrp": 90000.0,
+                "currency": "₹",
+                "taxText": "Incl.of all Taxes",
+                "packContents": "60.45 CM ALL IN ONE COMPUTER 1N,\nCENTRAL PROCESSING UNIT 1N,\nCABLE SET 1N,\nTOWERSTAND 1N,KEYBOARD 1N,MOUSE 1N",
+                "month": "Feb",
+                "year": "2026",
+                "width_mm": 65.0,
+                "height_mm": 150.0,
+                "fields": aio_fields,
+                "layoutStyle": "aio",
+                "manufactured_for_name": "HP India Sales Private Ltd.",
+                "manufactured_for_address": "No.24, Kothari Arena, Hosur Main Road, Adugodi, Bangalore, Karnataka - 560030"
+            },
+            "created_by": "Admin",
+            "created_at": now
+        })

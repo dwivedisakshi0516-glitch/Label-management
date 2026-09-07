@@ -91,6 +91,7 @@ export const Templates: React.FC = () => {
   // Form Fields
   const [name, setName] = useState('');
   const [categoryId, setCategoryId] = useState('');
+  const [layoutStyle, setLayoutStyle] = useState<'standard' | 'printer' | 'aio'>('standard');
   const [widthMm, setWidthMm] = useState<number>(100);
   const [heightMm, setHeightMm] = useState<number>(150);
   const [fields, setFields] = useState<TemplateField[]>(DEFAULT_TEMPLATE_FIELDS);
@@ -119,6 +120,7 @@ export const Templates: React.FC = () => {
     setEditingTemplate(null);
     setName('');
     setCategoryId('');
+    setLayoutStyle('standard');
     setWidthMm(100);
     setHeightMm(150);
     setFields(DEFAULT_TEMPLATE_FIELDS.map((f, i) => ({ ...f, order: i + 1 })));
@@ -129,6 +131,7 @@ export const Templates: React.FC = () => {
     setEditingTemplate(tpl);
     setName(tpl.name);
     setCategoryId(tpl.category_id || '');
+    setLayoutStyle((tpl.layout_style as 'standard' | 'printer' | 'aio') || 'standard');
     setWidthMm(tpl.width_mm || 100);
     setHeightMm(tpl.height_mm || 150);
     setFields(
@@ -154,6 +157,7 @@ export const Templates: React.FC = () => {
       width_mm: tpl.width_mm || 100,
       height_mm: tpl.height_mm || 150,
       fields: tpl.fields || DEFAULT_TEMPLATE_FIELDS,
+      layoutStyle: tpl.layout_style || 'standard',
     });
   };
 
@@ -173,6 +177,7 @@ export const Templates: React.FC = () => {
       width_mm: Number(widthMm) || 100,
       height_mm: Number(heightMm) || 150,
       fields: currentFields,
+      layoutStyle,
     });
   };
 
@@ -251,6 +256,7 @@ export const Templates: React.FC = () => {
       width_mm: Number(widthMm),
       height_mm: Number(heightMm),
       fields: normalizedFields,
+      layout_style: layoutStyle,
       is_default: editingTemplate ? editingTemplate.is_default : false,
     };
 
@@ -440,7 +446,7 @@ export const Templates: React.FC = () => {
             </div>
 
             <form onSubmit={handleSave} className="p-6 space-y-5 overflow-y-auto flex-1 text-xs">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
                   <label className="block font-semibold text-slate-700 uppercase tracking-wider mb-1">
                     Template Name <span className="text-rose-500">*</span>
@@ -467,6 +473,20 @@ export const Templates: React.FC = () => {
                     {categories.map((c) => (
                       <option key={c.id} value={c.id}>{c.name}</option>
                     ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                    Label Format
+                  </label>
+                  <select
+                    value={layoutStyle}
+                    onChange={(e) => setLayoutStyle(e.target.value as 'standard' | 'printer' | 'aio')}
+                    className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:ring-2 focus:ring-blue-500 focus:bg-white focus:outline-hidden"
+                  >
+                    <option value="standard">Standard</option>
+                    <option value="printer">Printer</option>
+                    <option value="aio">AIO Computer</option>
                   </select>
                 </div>
               </div>
@@ -697,15 +717,15 @@ export const Templates: React.FC = () => {
               </button>
             </div>
 
-            <div className="p-6 overflow-y-auto flex-1 flex flex-col items-center justify-center bg-slate-100/80">
-              <div className="shadow-2xl rounded-xs">
+            <div className="p-4 overflow-auto flex-1 flex flex-col items-center justify-start bg-slate-100/80">
+              <div className="shadow-2xl rounded-xs origin-top scale-[0.78]">
                 <PrintableLabel
                   snapshot={previewSnapshot}
                   copies={1}
                   isPrintMode={false}
                 />
               </div>
-              <p className="text-center text-[10px] text-slate-400 mt-4">
+              <p className="text-center text-[10px] text-slate-400 -mt-24">
                 Exact physical 1:1 proportion preview with Legal Metrology compliance layout.
               </p>
             </div>

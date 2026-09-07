@@ -22,11 +22,21 @@
   background: #94a3b8;
 }
 
+.print-hidden-root {
+  position: fixed;
+  left: -10000px;
+  top: 0;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
 /* =======================================================
    PHYSICAL PRINT STYLING & MEDIA QUERIES
    ======================================================= */
 @page {
-  size: auto;
+  size: A4 portrait;
   margin: 0mm;
 }
 
@@ -38,21 +48,17 @@
     padding: 0 !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
+    width: auto !important;
+    height: auto !important;
+    overflow: visible !important;
   }
 
-  /* Hide entire UI Shell */
-  header,
-  aside,
-  nav,
-  button,
-  form,
-  .no-print,
+  body * {
+    visibility: hidden !important;
+  }
+
   .preview-container {
     display: none !important;
-  }
-
-  #app-root-shell {
-    visibility: hidden !important;
   }
 
   /* Show only the targeted print element */
@@ -62,23 +68,56 @@
     position: absolute !important;
     top: 0 !important;
     left: 0 !important;
+    right: auto !important;
+    bottom: auto !important;
+    width: auto !important;
+    height: auto !important;
     margin: 0 !important;
     padding: 0 !important;
+    overflow: visible !important;
+    transform: none !important;
+    z-index: 999999 !important;
+  }
+
+  #printable-label-hidden-root * {
+    visibility: visible !important;
   }
 
   .print-only-area {
-    display: block !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
     visibility: visible !important;
+    width: 210mm !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 5mm !important;
+    overflow: visible !important;
+    transform: none !important;
+    gap: 0 !important;
   }
 
   .print-sticker-page {
-    display: flex !important;
+    display: block !important;
     visibility: visible !important;
     page-break-after: always;
     break-after: page;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
     margin: 0 !important;
+    overflow: hidden !important;
+    transform: none !important;
     box-shadow: none !important;
-    border: 2px solid #000000 !important;
+    border-color: #000000 !important;
     background: #ffffff !important;
+    flex: none !important;
+    max-width: none !important;
+    max-height: none !important;
+    box-sizing: border-box !important;
+  }
+
+  .print-sticker-page:last-child {
+    page-break-after: auto;
+    break-after: auto;
   }
 }

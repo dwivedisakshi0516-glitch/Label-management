@@ -290,12 +290,14 @@ export const SavedLabels: React.FC<SavedLabelsProps> = ({
               </button>
             </div>
 
-            <div className="p-6 overflow-y-auto flex-1 flex justify-center bg-slate-100">
-              <PrintableLabel
-                snapshot={viewingLabel.snapshot}
-                copies={1}
-                isPrintMode={false}
-              />
+            <div className="p-4 overflow-auto flex-1 flex justify-center items-start bg-slate-100">
+              <div className="origin-top scale-[0.78]">
+                <PrintableLabel
+                  snapshot={viewingLabel.snapshot}
+                  copies={1}
+                  isPrintMode={false}
+                />
+              </div>
             </div>
 
             <div className="p-4 border-t border-slate-100 flex items-center justify-end gap-2 bg-white">
@@ -323,7 +325,7 @@ export const SavedLabels: React.FC<SavedLabelsProps> = ({
 
       {/* Standalone hidden print render for direct list item printing */}
       {printTarget && (
-        <div id="printable-label-hidden-root" className="hidden">
+        <div id="printable-label-hidden-root" className="print-hidden-root">
           <PrintableLabel
             snapshot={printTarget.snapshot}
             copies={printCopies}
