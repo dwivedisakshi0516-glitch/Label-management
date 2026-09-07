@@ -38,6 +38,15 @@ const MONTHS = [
 const CURRENT_YEAR = new Date().getFullYear();
 const YEARS = Array.from({ length: 10 }, (_, i) => (CURRENT_YEAR - 2 + i).toString());
 
+const LABEL_SIZE_PRESETS = [
+  { label: '4 × 6 in (101.6 × 152.4 mm)', widthMm: 101.6, heightMm: 152.4 },
+  { label: '4 × 7 in (101.6 × 177.8 mm)', widthMm: 101.6, heightMm: 177.8 },
+  { label: '3 × 5 in (76.2 × 127 mm)', widthMm: 76.2, heightMm: 127 },
+  { label: '2 × 4 in (50.8 × 101.6 mm)', widthMm: 50.8, heightMm: 101.6 },
+  { label: '100 × 150 mm', widthMm: 100, heightMm: 150 },
+  { label: 'Custom Size', widthMm: 0, heightMm: 0 },
+];
+
 const BUILT_IN_TEMPLATE_KEYS = new Set([
   'manufactured_by',
   'manufactured_for',
@@ -197,6 +206,21 @@ export const EditLabel: React.FC<EditLabelProps> = ({
   };
 
   const customTemplateFields = templateFields.filter((field) => !BUILT_IN_TEMPLATE_KEYS.has(field.key));
+
+  const selectedPresetValue =
+    LABEL_SIZE_PRESETS.find(
+      (preset) =>
+        preset.widthMm > 0 &&
+        Math.abs(preset.widthMm - Number(widthMm)) < 0.1 &&
+        Math.abs(preset.heightMm - Number(heightMm)) < 0.1
+    )?.label || 'Custom Size';
+
+  const handleLabelSizePresetChange = (presetLabel: string) => {
+    const preset = LABEL_SIZE_PRESETS.find((item) => item.label === presetLabel);
+    if (!preset || preset.label === 'Custom Size') return;
+    setWidthMm(preset.widthMm);
+    setHeightMm(preset.heightMm);
+  };
 
   const handleSaveUpdatedLabel = async () => {
     if (!productName.trim()) {
@@ -471,7 +495,21 @@ export const EditLabel: React.FC<EditLabelProps> = ({
                   <label className="block font-semibold text-slate-700 uppercase tracking-wider mb-1">Pack Contents (Exact Listing)</label>
                   <textarea rows={3} value={packContents} onChange={(e) => setPackContents(e.target.value)} placeholder="Desktop Computer 1 N, CPU 1 N, Cable Set 1 N, Keyboard 1 N, Mouse 1 N" className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:ring-2 focus:ring-blue-500 focus:bg-white focus:outline-hidden font-mono leading-relaxed" />
                 </div>
-                <div className="grid grid-cols-2 gap-4 bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+                  <div className="sm:col-span-3">
+                    <label className="block font-semibold text-slate-700 uppercase tracking-wider mb-1">Label Size Preset</label>
+                    <select
+                      value={selectedPresetValue}
+                      onChange={(e) => handleLabelSizePresetChange(e.target.value)}
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 font-semibold focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+                    >
+                      {LABEL_SIZE_PRESETS.map((preset) => (
+                        <option key={preset.label} value={preset.label}>
+                          {preset.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                   <div>
                     <label className="block font-semibold text-slate-700 uppercase tracking-wider mb-1">Label Width (mm)</label>
                     <input type="number" min="10" max="500" value={widthMm} onChange={(e) => setWidthMm(Number(e.target.value))} className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 font-mono font-bold" />
@@ -479,6 +517,12 @@ export const EditLabel: React.FC<EditLabelProps> = ({
                   <div>
                     <label className="block font-semibold text-slate-700 uppercase tracking-wider mb-1">Label Height (mm)</label>
                     <input type="number" min="10" max="500" value={heightMm} onChange={(e) => setHeightMm(Number(e.target.value))} className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 font-mono font-bold" />
+                  </div>
+                  <div>
+                    <label className="block font-semibold text-slate-700 uppercase tracking-wider mb-1">Current Size</label>
+                    <div className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 font-mono font-bold">
+                      {Number(widthMm).toFixed(1)} × {Number(heightMm).toFixed(1)} mm
+                    </div>
                   </div>
                 </div>
               </div>
