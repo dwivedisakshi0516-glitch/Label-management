@@ -29,8 +29,8 @@ export const Login: React.FC<LoginProps> = ({ onSuccess }) => {
   const toast = useToast();
 
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [email, setEmail] = useState('admin@rit.com');
-  const [password, setPassword] = useState('admin123');
+  const [email, setEmail] = useState('ramaIT@yopmail.com');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
@@ -58,11 +58,9 @@ export const Login: React.FC<LoginProps> = ({ onSuccess }) => {
   const handleQuickDemoLogin = async () => {
     setIsLoading(true);
     try {
-      await login('admin@rit.com', 'admin123');
-      toast.success('Welcome back, System Administrator!');
-      onSuccess();
-    } catch (err: any) {
-      toast.error('Demo authentication failed.');
+      setEmail('ramaIT@yopmail.com');
+      setPassword('');
+      toast.info('Admin email filled. Enter the admin password to continue.');
     } finally {
       setIsLoading(false);
     }
@@ -229,7 +227,7 @@ export const Login: React.FC<LoginProps> = ({ onSuccess }) => {
                       required
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      placeholder="admin@rit.com"
+                      placeholder="ramaIT@yopmail.com"
                       className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-hidden focus:ring-2 focus:ring-blue-600 focus:bg-white transition"
                     />
                   </div>
@@ -298,7 +296,7 @@ export const Login: React.FC<LoginProps> = ({ onSuccess }) => {
               <div className="pt-3 border-t border-slate-100 flex items-center justify-between bg-slate-50/80 -mx-7 sm:-mx-8 -mb-7 sm:-mb-8 p-4 px-7 sm:px-8">
                 <div>
                   <p className="text-[11px] font-bold text-slate-800">Demo Admin Account</p>
-                  <p className="text-[10px] text-slate-500 font-mono">admin@rit.com / admin123</p>
+                  <p className="text-[10px] text-slate-500 font-mono">ramaIT@yopmail.com</p>
                 </div>
                 <button
                   type="button"

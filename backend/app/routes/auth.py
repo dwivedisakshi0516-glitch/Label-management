@@ -43,7 +43,7 @@ async def login(req: LoginRequest):
     user = await users_coll.find_one({"email": req.email})
     if not user:
         # Fallback check for demo admin
-        if req.email == settings.DEFAULT_ADMIN_EMAIL and req.password == settings.DEFAULT_ADMIN_PASSWORD:
+        if settings.DEFAULT_ADMIN_PASSWORD and req.email == settings.DEFAULT_ADMIN_EMAIL and req.password == settings.DEFAULT_ADMIN_PASSWORD:
             user = {
                 "id": "admin-demo-id",
                 "email": settings.DEFAULT_ADMIN_EMAIL,
@@ -53,8 +53,10 @@ async def login(req: LoginRequest):
         else:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email or password")
     else:
+        if user.get("role") == "disabled":
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email or password")
         if not verify_password(req.password, user.get("password_hash", "")):
-            if not (req.email == settings.DEFAULT_ADMIN_EMAIL and req.password == settings.DEFAULT_ADMIN_PASSWORD):
+            if not (settings.DEFAULT_ADMIN_PASSWORD and req.email == settings.DEFAULT_ADMIN_EMAIL and req.password == settings.DEFAULT_ADMIN_PASSWORD):
                 raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email or password")
 
     user_id = user.get("id") or str(user.get("_id"))
