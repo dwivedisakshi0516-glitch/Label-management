@@ -6,7 +6,16 @@ load_dotenv()
 
 def _env_str(name: str, default: str) -> str:
     value = os.getenv(name)
-    return default if value in ("", None) else value
+    if value in ("", None):
+        return default
+    return value.strip().strip('"').strip("'").removeprefix(">")
+
+def _env_first(names: List[str], default: str) -> str:
+    for name in names:
+        value = _env_str(name, "")
+        if value:
+            return value
+    return default
 
 def _env_int(name: str, default: int) -> int:
     value = os.getenv(name)
@@ -24,8 +33,8 @@ class Settings:
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = _env_int("ACCESS_TOKEN_EXPIRE_MINUTES", 60 * 24 * 7)
     
-    MONGODB_URL: str = _env_str("MONGODB_URL", "mongodb://localhost:27017")
-    DATABASE_NAME: str = _env_str("DATABASE_NAME", "rit_label_db")
+    MONGODB_URL: str = _env_first(["MONGODB_URL", "MONGODB_URI", "MONGO_URI"], "mongodb://localhost:27017")
+    DATABASE_NAME: str = _env_first(["DATABASE_NAME", "MONGO_DATABASE", "DB_NAME"], "rit_label_db")
     
     DEFAULT_ADMIN_EMAIL: str = _env_str("DEFAULT_ADMIN_EMAIL", "ramaIT@yopmail.com")
     DEFAULT_ADMIN_PASSWORD: str = _env_str("DEFAULT_ADMIN_PASSWORD", "")
