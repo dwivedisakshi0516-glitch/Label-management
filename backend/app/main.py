@@ -1,8 +1,6 @@
 import logging
 from contextlib import asynccontextmanager
-import os
 from fastapi import FastAPI
-from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from backend.app.core.config import settings
 from backend.app.database.mongodb import connect_to_mongo, close_mongo_connection, db_manager
@@ -51,14 +49,6 @@ app.add_middleware(
 @app.middleware("http")
 async def ensure_database_connection(request, call_next):
     await db_manager.ensure_connected()
-    if os.getenv("VERCEL") and db_manager.is_fallback and request.url.path != "/api/health":
-        return JSONResponse(
-            status_code=503,
-            content={
-                "detail": "Database unavailable. Configure MONGODB_URL in Vercel environment variables.",
-                "database": "fallback",
-            },
-        )
     return await call_next(request)
 
 # Include API Routers
@@ -90,4 +80,5 @@ async def health_check():
         "message": "RIT Label Suite API is fully operational",
         "database": "live" if not db_manager.is_fallback else "fallback",
         "database_name": settings.DATABASE_NAME if not db_manager.is_fallback else None,
+        "database_warning": "Using temporary fallback store. Check Atlas Network Access for Vercel outbound IPs." if db_manager.is_fallback else None,
     }
