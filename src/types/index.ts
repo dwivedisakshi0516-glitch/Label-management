@@ -3,11 +3,23 @@ export interface User {
   email: string;
   name: string;
   role: string;
+  badgeId?: string;
+  station?: string;
+  avatar?: string;
 }
+
+export type UserRole = 'ADMIN' | 'OPERATOR' | 'AUDITOR' | 'admin' | 'operator' | 'auditor';
 
 export interface Category {
   id: string;
   name: string;
+  code?: string;
+  modelsCount?: number;
+  active?: boolean;
+  hsn?: string;
+  targetStandard?: string;
+  serialRule?: string;
+  eWasteRule?: string;
   description?: string;
   default_warranty?: string;
   default_generic_name?: string;
@@ -94,12 +106,80 @@ export interface LabelTemplate {
   name: string;
   category_id?: string;
   category_name?: string;
-  width_mm: number;
-  height_mm: number;
-  fields: TemplateField[];
+  width_mm?: number;
+  height_mm?: number;
+  widthMm?: number;
+  heightMm?: number;
+  fields?: TemplateField[];
   is_default?: boolean;
+  version?: string;
+  dimensions?: string;
+  dpi?: number;
+  mediaType?: string;
+  fieldsCount?: number;
+  zeroBarcodeEnforced?: boolean;
   created_at?: string;
   updated_at?: string;
+}
+
+export interface ProductModel {
+  id: string;
+  sku?: string;
+  productNo?: string;
+  name: string;
+  categoryCode: string;
+  categoryName: string;
+  brand?: string;
+  plant?: string;
+  plantCode?: string;
+  supportContact?: string;
+  warranty?: string;
+  defaultTemplate?: string;
+  status?: string;
+  mrp?: string;
+  defaultMrp?: string;
+  mfgMonthYear?: string;
+  powerRating?: string;
+  manufacturedBy?: string;
+  manufacturedByAddress?: string;
+  manufacturedFor?: string;
+  manufacturedForAddress?: string;
+  complaintAddress?: string;
+  email?: string;
+  tollFree?: string;
+  whatsapp?: string;
+  website?: string;
+  countryOfOrigin?: string;
+  genericName?: string;
+  packContents?: string;
+  bisCode?: string;
+  [key: string]: any;
+}
+
+export interface PrintJob {
+  id: string;
+  productModel: string;
+  spec?: string;
+  category?: string;
+  hsn?: string;
+  templateTarget?: string;
+  batchQty?: number;
+  totalQty?: number;
+  status: string;
+  mrp?: string;
+  mfgDate?: string;
+  timestamp?: string;
+  checksum?: string;
+  [key: string]: any;
+}
+
+export interface SnapshotAuditRecord {
+  id?: string;
+  [key: string]: any;
+}
+
+export interface LinePrinterTelemetry {
+  [key: string]: any;
 }
 
 export interface LabelSnapshot {
@@ -190,4 +270,7 @@ export type NavigationPath =
   | 'edit-label'
   | 'saved-labels'
   | 'settings'
-  | 'login';
+  | 'login'
+  | 'template-library'
+  | 'manufacturers-plants'
+  | 'line-settings';

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { NavigationPath } from '../layout/Sidebar';
+import { NavigationPath } from '../../types';
 import { useAuth } from '../../context/AuthContext';
 import {
   Library,
