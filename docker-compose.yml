@@ -23,8 +23,8 @@ services:
     environment:
       - PROJECT_NAME=RIT Label Precision Suite
       - API_V1_STR=/api
-      - MONGODB_URL=mongodb://mongodb:27017
-      - DATABASE_NAME=rit_label_db
+      - MONGODB_URL=${MONGODB_URL:-mongodb://mongodb:27017}
+      - DATABASE_NAME=${DATABASE_NAME:-rit_label_db}
       - SECRET_KEY=rit-secret-key-super-secure-jwt-token-2026-label-precision-suite
       - DEFAULT_ADMIN_EMAIL=admin@rit.com
       - DEFAULT_ADMIN_PASSWORD=admin123
