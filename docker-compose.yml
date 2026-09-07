@@ -26,8 +26,8 @@ services:
       - MONGODB_URL=${MONGODB_URL:-mongodb://mongodb:27017}
       - DATABASE_NAME=${DATABASE_NAME:-rit_label_db}
       - SECRET_KEY=rit-secret-key-super-secure-jwt-token-2026-label-precision-suite
-      - DEFAULT_ADMIN_EMAIL=admin@rit.com
-      - DEFAULT_ADMIN_PASSWORD=admin123
+      - DEFAULT_ADMIN_EMAIL=${DEFAULT_ADMIN_EMAIL:-ramaIT@yopmail.com}
+      - DEFAULT_ADMIN_PASSWORD=${DEFAULT_ADMIN_PASSWORD}
     ports:
       - "8000:8000"
     depends_on:
