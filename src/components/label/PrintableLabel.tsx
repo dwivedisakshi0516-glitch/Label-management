@@ -288,6 +288,14 @@ export const PrintableLabel: React.FC<PrintableLabelProps> = ({
     const printerPadding = isLandscapePrinter ? '5mm 6mm 4mm' : '7mm 6mm 8mm';
     const barcodeHeight = isLandscapePrinter ? 24 : 42;
     const barcodeTextSize = isLandscapePrinter ? '5.8pt' : '8pt';
+    const importerValue = String(snapshot.importer_name || '');
+    const importerSplitIndex = importerValue.toUpperCase().indexOf('NOS.');
+    const importerName = importerSplitIndex > -1
+      ? importerValue.slice(0, importerSplitIndex).replace(/,\s*$/, '').trim()
+      : importerValue;
+    const importerAddress = importerSplitIndex > -1
+      ? importerValue.slice(importerSplitIndex).trim()
+      : '';
 
     return (
       <div
@@ -322,7 +330,10 @@ export const PrintableLabel: React.FC<PrintableLabelProps> = ({
         <div className={isLandscapePrinter ? 'pt-0.5' : 'pt-1'}>
           {labelTitle('Maximum Retail Price:')} {labelValue(`${currency} ${Number(snapshot.mrp || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })} (${snapshot.taxText || 'Inclusive of all Taxes'})`)}
         </div>
-        <div className={isLandscapePrinter ? 'pt-0.5' : 'pt-1'}>{labelTitle('Importers Name & Address:')} {labelValue(snapshot.importer_name || '')}</div>
+        <div className={isLandscapePrinter ? 'pt-0.5' : 'pt-1'}>
+          {labelTitle('Importers Name & Address:')} {labelValue(importerName)}
+          {importerAddress && <div style={valueTextStyle}>{importerAddress}</div>}
+        </div>
         <div>{labelTitle('For Customer Complaints:')} {labelValue(snapshot.customerCareProfile || 'Customer Care Executive')}</div>
         <div>{labelTitle('Name & Address:')} {labelValue(snapshot.customerCareAddress || 'Same as Importer Above')}</div>
         <div className={isLandscapePrinter ? 'pt-0.5' : 'pt-1'}>{labelTitle('Customer Care:')} {labelValue(snapshot.customerCarePhone || '')}</div>
