@@ -1,8 +1,11 @@
 import datetime
+import logging
 import uuid
 from backend.app.database.mongodb import db_manager
 from backend.app.core.security import get_password_hash
 from backend.app.core.config import settings
+
+logger = logging.getLogger(__name__)
 
 async def seed_initial_data():
     users_coll = db_manager.get_collection("users")
@@ -16,20 +19,23 @@ async def seed_initial_data():
 
     # 1. Seed Default Admin User
     if settings.DEFAULT_ADMIN_EMAIL and settings.DEFAULT_ADMIN_PASSWORD:
-        admin = await users_coll.find_one({"email": settings.DEFAULT_ADMIN_EMAIL})
-        admin_doc = {
-            "email": settings.DEFAULT_ADMIN_EMAIL,
-            "password_hash": get_password_hash(settings.DEFAULT_ADMIN_PASSWORD),
-            "name": "System Administrator",
-            "role": "admin",
-            "updated_at": datetime.datetime.utcnow().isoformat()
-        }
-        if not admin:
-            admin_doc["id"] = str(uuid.uuid4())
-            admin_doc["created_at"] = datetime.datetime.utcnow().isoformat()
-            await users_coll.insert_one(admin_doc)
+        if len(settings.DEFAULT_ADMIN_PASSWORD.encode("utf-8")) > 72:
+            logger.error("DEFAULT_ADMIN_PASSWORD is too long for bcrypt; skipping admin seed.")
         else:
-            await users_coll.update_one({"email": settings.DEFAULT_ADMIN_EMAIL}, {"$set": admin_doc})
+            admin = await users_coll.find_one({"email": settings.DEFAULT_ADMIN_EMAIL})
+            admin_doc = {
+                "email": settings.DEFAULT_ADMIN_EMAIL,
+                "password_hash": get_password_hash(settings.DEFAULT_ADMIN_PASSWORD),
+                "name": "System Administrator",
+                "role": "admin",
+                "updated_at": datetime.datetime.utcnow().isoformat()
+            }
+            if not admin:
+                admin_doc["id"] = str(uuid.uuid4())
+                admin_doc["created_at"] = datetime.datetime.utcnow().isoformat()
+                await users_coll.insert_one(admin_doc)
+            else:
+                await users_coll.update_one({"email": settings.DEFAULT_ADMIN_EMAIL}, {"$set": admin_doc})
 
     # 2. Seed Settings
     existing_settings = await settings_coll.find_one({"id": "default_settings"})

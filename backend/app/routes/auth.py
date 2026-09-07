@@ -67,7 +67,10 @@ async def login(req: LoginRequest):
     else:
         if user.get("role") == "disabled":
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email or password")
-        if not verify_password(password, user.get("password_hash", "")):
+        password_matches_hash = False
+        if len(password.encode("utf-8")) <= 72:
+            password_matches_hash = verify_password(password, user.get("password_hash", ""))
+        if not password_matches_hash:
             if not (admin_password and email.lower() == admin_email.lower() and password == admin_password):
                 raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email or password")
 
