@@ -74,6 +74,12 @@ const AIO_TEMPLATE_FIELDS = [
   { key: 'manufactured_for_address', label: 'Manufactured For Address', enabled: true, font_size: 10, bold: false, alignment: 'left' as const, order: 15, default_value: 'No.24, Kothari Arena, Hosur Main Road, Adugodi, Bangalore, Karnataka - 560030' },
 ];
 
+const DESKTOP_TEMPLATE_FIELDS = [
+  { key: 'manufactured_for_name', label: 'Manufactured For Name', enabled: true, font_size: 10, bold: true, alignment: 'left' as const, order: 14, default_value: 'HP India Sales Private Ltd.' },
+  { key: 'manufactured_for_address', label: 'Manufactured For Address', enabled: true, font_size: 10, bold: false, alignment: 'left' as const, order: 15, default_value: 'No.24, Kothari Arena, Hosur Main Road, Adugodi, Bangalore, Karnataka - 560030' },
+  { key: 'generic_note', label: 'Generic Name Note', enabled: true, font_size: 9, bold: false, alignment: 'left' as const, order: 16, default_value: '(EXCLUDING MONITOR)' },
+];
+
 const getPrinterCustomDefaults = () => ({
   importer_name: 'BROTHER INTERNATIONAL (INDIA) PVT LTD, NOS. 801 AND 802, 8TH FLOOR, ALPHA BUILDING, HIRANANDANI GARDENS, POWAI, MUMBAI - 400 076, MAHARASHTRA',
   imported_in: 'January 2026',
@@ -85,6 +91,12 @@ const getPrinterCustomDefaults = () => ({
 const getAioCustomDefaults = () => ({
   manufactured_for_name: 'HP India Sales Private Ltd.',
   manufactured_for_address: 'No.24, Kothari Arena, Hosur Main Road, Adugodi, Bangalore, Karnataka - 560030',
+});
+
+const getDesktopCustomDefaults = () => ({
+  manufactured_for_name: 'HP India Sales Private Ltd.',
+  manufactured_for_address: 'No.24, Kothari Arena, Hosur Main Road, Adugodi, Bangalore, Karnataka - 560030',
+  generic_note: '(EXCLUDING MONITOR)',
 });
 
 const withPrinterFields = (fields: LabelTemplate['fields'] = [], productNumber = '', genericName = '') => {
@@ -108,11 +120,24 @@ const withAioFields = (fields: LabelTemplate['fields'] = [], productNumber = '',
   ];
 };
 
+const withDesktopFields = (fields: LabelTemplate['fields'] = [], categoryName = '', genericName = '') => {
+  const category = categoryName.toLowerCase();
+  const normalizedGenericName = genericName.toUpperCase().replace(/-/g, ' ');
+  const isDesktopLabel = category.includes('desktop') || normalizedGenericName === 'DESKTOP COMPUTER';
+  if (!isDesktopLabel) return fields;
+  const existingKeys = new Set(fields.map((field) => field.key));
+  return [
+    ...fields,
+    ...DESKTOP_TEMPLATE_FIELDS.filter((field) => !existingKeys.has(field.key)),
+  ];
+};
+
 const getCategoryLayoutStyle = (categoryName = '', productNumber = '', genericName = '') => {
   const category = categoryName.toLowerCase();
   const normalizedGeneric = genericName.toUpperCase().replace(/-/g, ' ');
   if (category.includes('printer')) return 'printer';
   if (category.includes('aio') || normalizedGeneric.includes('ALL IN ONE COMPUTER')) return 'aio';
+  if (category.includes('desktop') || normalizedGeneric === 'DESKTOP COMPUTER') return 'desktop';
   if (productNumber.toUpperCase().includes('DCP-L5660DN')) return 'printer';
   return 'standard';
 };
@@ -294,6 +319,7 @@ export const CreateLabel: React.FC<CreateLabelProps> = ({
 
   const handleProductSelect = async (prod: Product, cat?: Category, tpl?: LabelTemplate) => {
     const isPrinterProduct = Boolean(prod.product_number?.toUpperCase().includes('DCP-L5660DN') || prod.generic_name?.toUpperCase().includes('LASER MFC PRINTER'));
+    const isDesktopProduct = Boolean(cat?.name?.toLowerCase().includes('desktop') || prod.generic_name?.toUpperCase().replace(/-/g, ' ') === 'DESKTOP COMPUTER');
 
     setSelectedProductId(prod.id);
     setProductName(prod.name);
@@ -313,6 +339,14 @@ export const CreateLabel: React.FC<CreateLabelProps> = ({
         ...current,
         ...Object.fromEntries(
           Object.entries(getPrinterCustomDefaults()).filter(([key]) => !current[key])
+        ),
+      }));
+    }
+    if (isDesktopProduct) {
+      setCustomFieldValues((current) => ({
+        ...current,
+        ...Object.fromEntries(
+          Object.entries(getDesktopCustomDefaults()).filter(([key]) => !current[key])
         ),
       }));
     }
@@ -443,17 +477,21 @@ export const CreateLabel: React.FC<CreateLabelProps> = ({
     toast.success('Imported row loaded into label fields.');
   };
 
-  const selectedTemplateFields = withAioFields(
-    withPrinterFields(
-      templates.find((t) => t.id === selectedTemplateId)?.fields || [],
+  const selectedCategoryName = categories.find((c) => c.id === selectedCategoryId)?.name || '';
+  const selectedTemplateFields = withDesktopFields(
+    withAioFields(
+      withPrinterFields(
+        templates.find((t) => t.id === selectedTemplateId)?.fields || [],
+        productNumber,
+        genericName
+      ),
       productNumber,
       genericName
     ),
-    productNumber,
+    selectedCategoryName,
     genericName
   );
   const customTemplateFields = selectedTemplateFields.filter((field) => !BUILT_IN_TEMPLATE_KEYS.has(field.key));
-  const selectedCategoryName = categories.find((c) => c.id === selectedCategoryId)?.name || '';
   const selectedTemplate = templates.find((t) => t.id === selectedTemplateId);
   const layoutStyle =
     selectedTemplate?.category_id === selectedCategoryId

@@ -106,6 +106,7 @@ const getCategoryLayoutStyle = (categoryName = '', productNumber = '', genericNa
   const normalizedGeneric = genericName.toUpperCase().replace(/-/g, ' ');
   if (category.includes('printer')) return 'printer';
   if (category.includes('aio') || normalizedGeneric.includes('ALL IN ONE COMPUTER')) return 'aio';
+  if (category.includes('desktop') || normalizedGeneric === 'DESKTOP COMPUTER') return 'desktop';
   if (productNumber.toUpperCase().includes('DCP-L5660DN')) return 'printer';
   return 'standard';
 };
@@ -121,6 +122,11 @@ const CATEGORY_CUSTOM_FIELDS = {
     { key: 'customer_care_other_numbers', label: 'Customer Care - Other Numbers', enabled: true, font_size: 9, bold: false, alignment: 'left' as const, order: 16, default_value: '' },
     { key: 'barcode_text', label: 'Barcode', enabled: true, font_size: 10, bold: true, alignment: 'left' as const, order: 17, default_value: '' },
     { key: 'recycling_information', label: 'Recycling Information', enabled: true, font_size: 8, bold: false, alignment: 'left' as const, order: 18, default_value: '' },
+  ],
+  desktop: [
+    { key: 'manufactured_for_name', label: 'Manufactured For Name', enabled: true, font_size: 10, bold: true, alignment: 'left' as const, order: 14, default_value: 'HP India Sales Private Ltd.' },
+    { key: 'manufactured_for_address', label: 'Manufactured For Address', enabled: true, font_size: 10, bold: false, alignment: 'left' as const, order: 15, default_value: 'No.24, Kothari Arena, Hosur Main Road, Adugodi, Bangalore, Karnataka - 560030' },
+    { key: 'generic_note', label: 'Generic Name Note', enabled: true, font_size: 9, bold: false, alignment: 'left' as const, order: 16, default_value: '(EXCLUDING MONITOR)' },
   ],
 };
 
@@ -259,7 +265,7 @@ export const EditLabel: React.FC<EditLabelProps> = ({
     setValueItalic(Boolean(s.labelStyle?.valueItalic));
     setValueUnderline(Boolean(s.labelStyle?.valueUnderline));
     const layoutStyle = s.layoutStyle || getCategoryLayoutStyle(lbl.category_name || '', s.productNumber || '', s.genericName || '');
-    const fallbackCustomFields = CATEGORY_CUSTOM_FIELDS[layoutStyle as 'aio' | 'printer'] || [];
+    const fallbackCustomFields = CATEGORY_CUSTOM_FIELDS[layoutStyle as 'aio' | 'printer' | 'desktop'] || [];
     const snapshotFields = s.fields || [];
     const snapshotFieldKeys = new Set(snapshotFields.map((field) => field.key));
     setTemplateFields([
