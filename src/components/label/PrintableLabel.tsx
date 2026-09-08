@@ -33,8 +33,7 @@ export const PrintableLabel: React.FC<PrintableLabelProps> = ({
   const labelStyle = snapshot.labelStyle || {};
   const isPrinterStyle =
     layoutStyle === 'printer' ||
-    String(snapshot.genericName || '').toUpperCase().includes('LASER MFC PRINTER') ||
-    Boolean(snapshot.barcode_text);
+    String(snapshot.genericName || '').toUpperCase().includes('LASER MFC PRINTER');
   const isAioStyle =
     layoutStyle === 'aio' ||
     String(snapshot.genericName || '').toUpperCase().replace(/-/g, ' ').includes('ALL IN ONE COMPUTER') ||
@@ -89,6 +88,11 @@ export const PrintableLabel: React.FC<PrintableLabelProps> = ({
   const snapshotCustomSections = Array.isArray(snapshot.customSections)
     ? snapshot.customSections.filter((section) => section.heading || section.content)
     : [];
+  const hasConfiguredFields = Boolean(snapshot.fields && snapshot.fields.length > 0);
+  const isFieldVisible = (fieldKey: string) =>
+    !hasConfiguredFields || fields.some((field) => field.key === fieldKey && field.enabled);
+  const getFieldLabel = (fieldKey: string, fallback: string) =>
+    fields.find((field) => field.key === fieldKey)?.label || fallback;
 
   const renderCustomSections = (className = 'mt-3 space-y-1 text-[8.5pt]') => {
     if (snapshotCustomSections.length === 0) return null;
@@ -275,19 +279,11 @@ export const PrintableLabel: React.FC<PrintableLabelProps> = ({
     }
   };
 
-  const barcodeValue = String(snapshot.barcode_text || '8C5L5L00145');
-  const barcodeBars = Array.from({ length: 64 }, (_, index) => {
-    const code = barcodeValue.charCodeAt(index % barcodeValue.length) || 49;
-    return 1 + ((code + index) % 4);
-  });
-
   const renderPrinterSticker = (keyIndex: number) => {
     const isLandscapePrinter = heightMm <= 105;
     const printerFontSize = isLandscapePrinter ? '6.8pt' : '8.5pt';
     const printerLineHeight = isLandscapePrinter ? '1.1' : '1.18';
     const printerPadding = isLandscapePrinter ? '5mm 6mm 4mm' : '7mm 6mm 8mm';
-    const barcodeHeight = isLandscapePrinter ? 24 : 42;
-    const barcodeTextSize = isLandscapePrinter ? '5.8pt' : '8pt';
     const importerValue = String(snapshot.importer_name || '');
     const importerSplitIndex = importerValue.toUpperCase().indexOf('NOS.');
     const importerName = importerSplitIndex > -1
@@ -316,54 +312,47 @@ export const PrintableLabel: React.FC<PrintableLabelProps> = ({
         }}
       >
       <div className={`${isLandscapePrinter ? 'space-y-0.5' : 'space-y-1'} shrink-0`}>
-        <div>{labelTitle('Common /Generic Name:')} {labelValue(snapshot.genericName || 'LASER MFC PRINTER')}</div>
-        <div>{labelTitle('Product:')} {labelValue(snapshot.productNumber || snapshot.productName || 'DCP-L5660DN')}</div>
-        <div>
-          {labelTitle('Manufactured & Packed by Address:')} {labelValue(snapshot.manufacturerName || 'BROTHER INDUSTRIES (VIETNAM) LTD.')}
-          {snapshot.manufacturerAddress && <div style={valueTextStyle}>{snapshot.manufacturerAddress}</div>}
-        </div>
-        <div>{labelTitle('Country of Origin:')} {labelValue(snapshot.countryOfOrigin || 'Vietnam')}</div>
-        <div>{labelTitle('Imported In:')} {labelValue(snapshot.imported_in || `${snapshot.month || 'January'} ${snapshot.year || '2026'}`)}</div>
-        <div>
-          {labelTitle('Number of units (Quantity):')} {labelValue(`${snapshot.netQuantity || '1N'} - (${snapshot.packContents || '1N Printer, 1N Power Cable, 1N Toner, 1N Drum, 1N Guide'})`)}
-        </div>
-        <div className={isLandscapePrinter ? 'pt-0.5' : 'pt-1'}>
-          {labelTitle('Maximum Retail Price:')} {labelValue(`${currency} ${Number(snapshot.mrp || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })} (${snapshot.taxText || 'Inclusive of all Taxes'})`)}
-        </div>
-        <div className={isLandscapePrinter ? 'pt-0.5' : 'pt-1'}>
-          {labelTitle('Importers Name & Address:')} {labelValue(importerName)}
-          {importerAddress && <div style={valueTextStyle}>{importerAddress}</div>}
-        </div>
-        <div>{labelTitle('For Customer Complaints:')} {labelValue(snapshot.customerCareProfile || 'Customer Care Executive')}</div>
-        <div>{labelTitle('Name & Address:')} {labelValue(snapshot.customerCareAddress || 'Same as Importer Above')}</div>
-        <div className={isLandscapePrinter ? 'pt-0.5' : 'pt-1'}>{labelTitle('Customer Care:')} {labelValue(snapshot.customerCarePhone || '')}</div>
-        {(snapshot.customerCareTollFree || snapshot.customer_care_other_numbers) && (
+        {isFieldVisible('generic_name') && <div>{labelTitle('Common /Generic Name:')} {labelValue(snapshot.genericName || 'LASER MFC PRINTER')}</div>}
+        {isFieldVisible('product_number') && <div>{labelTitle('Product:')} {labelValue(snapshot.productNumber || snapshot.productName || 'DCP-L5660DN')}</div>}
+        {isFieldVisible('manufactured_by') && (
+          <div>
+            {labelTitle('Manufactured & Packed by Address:')} {labelValue(snapshot.manufacturerName || 'BROTHER INDUSTRIES (VIETNAM) LTD.')}
+            {snapshot.manufacturerAddress && <div style={valueTextStyle}>{snapshot.manufacturerAddress}</div>}
+          </div>
+        )}
+        {isFieldVisible('country_of_origin') && <div>{labelTitle('Country of Origin:')} {labelValue(snapshot.countryOfOrigin || 'Vietnam')}</div>}
+        {isFieldVisible('imported_in') && <div>{labelTitle('Imported In:')} {labelValue(snapshot.imported_in || `${snapshot.month || 'January'} ${snapshot.year || '2026'}`)}</div>}
+        {(isFieldVisible('net_quantity') || isFieldVisible('pack_contents')) && (
+          <div>
+            {labelTitle('Number of units (Quantity):')} {labelValue(`${snapshot.netQuantity || '1N'} - (${snapshot.packContents || '1N Printer, 1N Power Cable, 1N Toner, 1N Drum, 1N Guide'})`)}
+          </div>
+        )}
+        {isFieldVisible('mrp') && (
+          <div className={isLandscapePrinter ? 'pt-0.5' : 'pt-1'}>
+            {labelTitle('Maximum Retail Price:')} {labelValue(`${currency} ${Number(snapshot.mrp || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })} (${snapshot.taxText || 'Inclusive of all Taxes'})`)}
+          </div>
+        )}
+        {isFieldVisible('importer_name') && (
+          <div className={isLandscapePrinter ? 'pt-0.5' : 'pt-1'}>
+            {labelTitle('Importers Name & Address:')} {labelValue(importerName)}
+            {importerAddress && <div style={valueTextStyle}>{importerAddress}</div>}
+          </div>
+        )}
+        {isFieldVisible('for_complaints') && <div>{labelTitle('For Customer Complaints:')} {labelValue(snapshot.customerCareProfile || 'Customer Care Executive')}</div>}
+        {isFieldVisible('for_complaints') && <div>{labelTitle('Name & Address:')} {labelValue(snapshot.customerCareAddress || 'Same as Importer Above')}</div>}
+        {isFieldVisible('telephone') && <div className={isLandscapePrinter ? 'pt-0.5' : 'pt-1'}>{labelTitle('Customer Care:')} {labelValue(snapshot.customerCarePhone || '')}</div>}
+        {(isFieldVisible('telephone') && (snapshot.customerCareTollFree || snapshot.customer_care_other_numbers)) && (
           <div style={valueTextStyle}>{snapshot.customerCareTollFree || snapshot.customer_care_other_numbers}</div>
         )}
-        <div>{labelTitle('Website:')} {labelValue(snapshot.customerCareWebsite || snapshot.website || 'WWW.BROTHER.IN')}</div>
-        <div>{labelTitle('E-mail:')} {labelValue(snapshot.customerCareEmail || 'CUSTOMERCARE@BROTHER.IN')}</div>
-        <div className={isLandscapePrinter ? 'pt-0.5' : 'pt-1'}>{labelTitle('Barcode:')}</div>
+        {isFieldVisible('for_complaints') && <div>{labelTitle('Website:')} {labelValue(snapshot.customerCareWebsite || snapshot.website || 'WWW.BROTHER.IN')}</div>}
+        {isFieldVisible('email') && <div>{labelTitle('E-mail:')} {labelValue(snapshot.customerCareEmail || 'CUSTOMERCARE@BROTHER.IN')}</div>}
       </div>
 
-      <div className={isLandscapePrinter ? 'mt-1 flex flex-col items-center shrink-0' : 'mt-1 flex flex-col items-center shrink-0'}>
-        <div className="flex items-end gap-px bg-white px-1" style={{ height: `${barcodeHeight}px` }}>
-          {barcodeBars.map((barWidth, index) => (
-            <span
-              key={index}
-              className="block bg-black"
-              style={{
-                width: `${isLandscapePrinter ? Math.max(1, barWidth - 1) : barWidth}px`,
-                height: `${index % 7 === 0 ? barcodeHeight : barcodeHeight - 6 + (index % 5)}px`,
-              }}
-            />
-          ))}
+      {isFieldVisible('recycling_information') && (
+        <div className={`${isLandscapePrinter ? 'mt-2' : 'mt-4'} font-semibold shrink-0`} style={valueTextStyle}>
+          {snapshot.recycling_information || 'For Recycling of your product, please visit: www.brother.in'}
         </div>
-        <div className="font-mono tracking-[0.25em] mt-0.5" style={{ fontSize: barcodeTextSize }}>* {barcodeValue.split('').join(' ')} *</div>
-      </div>
-
-      <div className={`${isLandscapePrinter ? 'mt-2' : 'mt-4'} font-semibold shrink-0`} style={valueTextStyle}>
-        {snapshot.recycling_information || 'For Recycling of your product, please visit: www.brother.in'}
-      </div>
+      )}
       {renderCustomSections(isLandscapePrinter ? 'mt-1 space-y-0.5 text-[6pt] font-semibold' : 'mt-3 space-y-1 text-[8pt] font-semibold')}
       </div>
     );
@@ -408,54 +397,76 @@ export const PrintableLabel: React.FC<PrintableLabelProps> = ({
           ...baseLabelStyle,
         }}
       >
-        <div className="break-words">
-          <span style={titleTextStyle}>Manufactured By:&nbsp;</span>
-          <span style={valueTextStyle}>{snapshot.manufacturerName || 'Flextronics Technologies India Pvt. Ltd.'}</span>
-          {snapshot.manufacturerAddress && <div style={valueTextStyle}>{snapshot.manufacturerAddress}</div>}
-        </div>
-
-        <div className={sectionGap}>
-          <span style={titleTextStyle}>Manufactured For:&nbsp;</span>
-          <span style={valueTextStyle}>{manufacturedForName}</span>
-          <div style={valueTextStyle}>{manufacturedForAddress}</div>
-        </div>
-
-        <div className={sectionGap}>
-          <span style={titleTextStyle}>For Complaints:&nbsp;</span>
-          <span style={valueTextStyle}>{snapshot.customerCareProfile || 'Customer Care'} </span>
-          <span style={valueTextStyle}>(Same address as above).Email: {snapshot.customerCareEmail || 'in.contact@hp.com'}</span>
-        </div>
-        <div className={sectionGap}><span style={titleTextStyle}>Tel: </span>{labelValue(`${snapshot.customerCarePhone || snapshot.customerCareTollFree || '1-800-258-7170'} (toll free)`)}</div>
-        <div className={sectionGap}><span style={titleTextStyle}>WhatsApp: </span>{labelValue(snapshot.customerCareWhatsApp || '+ 91 22 6101 4560')}</div>
-
-        <div className={isShortAio ? 'mt-2' : 'mt-3'}><span style={titleTextStyle}>Month & Year of Manufacture:&nbsp;</span>{labelValue(`${snapshot.month || 'Feb'} ${snapshot.year || '2026'}`)}</div>
-        <div className="mt-0.5 flex items-baseline gap-2 whitespace-nowrap">
-          <span style={titleTextStyle}>MRP</span>
-          <span className={isShortAio ? 'text-[11pt] leading-none' : 'text-[15pt] leading-none'} style={valueTextStyle}>{currency}</span>
-          <span style={valueTextStyle}>{mrpValue}</span>
-          <span className={isShortAio ? 'text-[5.3pt]' : 'text-[6.5pt]'} style={valueTextStyle}>Incl.of all Taxes</span>
-        </div>
-
-        <div className={isShortAio ? 'mt-2 space-y-0.5' : 'mt-3 space-y-1'}>
-          <div className="flex gap-2">
-            <span className="shrink-0" style={{ width: aioRowLabelWidth, ...titleTextStyle }}>Product No :</span>
-            <span className="min-w-0 break-words" style={valueTextStyle}>{snapshot.productNumber || 'D2UP4PT#ACJ'}</span>
+        {isFieldVisible('manufactured_by') && (
+          <div className="break-words">
+            <span style={titleTextStyle}>{getFieldLabel('manufactured_by', 'Manufactured By')}:&nbsp;</span>
+            <span style={valueTextStyle}>{snapshot.manufacturerName || 'Flextronics Technologies India Pvt. Ltd.'}</span>
+            {snapshot.manufacturerAddress && <div style={valueTextStyle}>{snapshot.manufacturerAddress}</div>}
           </div>
-          <div className="flex gap-2">
-            <span className="shrink-0" style={{ width: aioRowLabelWidth, ...titleTextStyle }}>Country of Origin :</span>
-            <span className="min-w-0 break-words" style={valueTextStyle}>{snapshot.countryOfOrigin || 'India'}</span>
-          </div>
-          <div className="flex gap-2">
-            <span className="shrink-0" style={{ width: aioRowLabelWidth, ...titleTextStyle }}>Generic Name :</span>
-            <span className="min-w-0 break-words" style={valueTextStyle}>{snapshot.genericName || 'ALL IN ONE COMPUTER'}</span>
-          </div>
-        </div>
+        )}
 
-        <div className={isShortAio ? 'mt-2 text-[10pt]' : 'mt-4 text-[12pt]'}><span style={titleTextStyle}>Net Qty:&nbsp;&nbsp;</span>{labelValue(snapshot.netQuantity || '1 N')}</div>
+        {(isFieldVisible('manufactured_for_name') || isFieldVisible('manufactured_for_address')) && (
+          <div className={sectionGap}>
+            {isFieldVisible('manufactured_for_name') && (
+              <>
+                <span style={titleTextStyle}>{getFieldLabel('manufactured_for_name', 'Manufactured For')}:&nbsp;</span>
+                <span style={valueTextStyle}>{manufacturedForName}</span>
+              </>
+            )}
+            {isFieldVisible('manufactured_for_address') && <div style={valueTextStyle}>{manufacturedForAddress}</div>}
+          </div>
+        )}
 
-        <div className={isShortAio ? 'mt-4 whitespace-pre-line' : 'mt-6 whitespace-pre-line'} style={{ fontSize: packTextSize, lineHeight: isShortAio ? 1.1 : 1.18, ...valueTextStyle }}>
-          [{snapshot.packContents || '60.45 CM ALL IN ONE COMPUTER 1N,\nCENTRAL PROCESSING UNIT 1N,\nCABLE SET 1N,\nTOWERSTAND 1N,KEYBOARD 1N,MOUSE 1N'}]
-        </div>
+        {isFieldVisible('for_complaints') && (
+          <div className={sectionGap}>
+            <span style={titleTextStyle}>{getFieldLabel('for_complaints', 'For Complaints')}:&nbsp;</span>
+            <span style={valueTextStyle}>{snapshot.customerCareProfile || 'Customer Care'} </span>
+            <span style={valueTextStyle}>(Same address as above).Email: {snapshot.customerCareEmail || 'in.contact@hp.com'}</span>
+          </div>
+        )}
+        {isFieldVisible('telephone') && <div className={sectionGap}><span style={titleTextStyle}>{getFieldLabel('telephone', 'Tel')}: </span>{labelValue(`${snapshot.customerCarePhone || snapshot.customerCareTollFree || '1-800-258-7170'} (toll free)`)}</div>}
+        {isFieldVisible('whatsapp') && <div className={sectionGap}><span style={titleTextStyle}>{getFieldLabel('whatsapp', 'WhatsApp')}: </span>{labelValue(snapshot.customerCareWhatsApp || '+ 91 22 6101 4560')}</div>}
+
+        {isFieldVisible('month_year') && <div className={isShortAio ? 'mt-2' : 'mt-3'}><span style={titleTextStyle}>{getFieldLabel('month_year', 'Month & Year of Manufacture')}:&nbsp;</span>{labelValue(`${snapshot.month || 'Feb'} ${snapshot.year || '2026'}`)}</div>}
+        {isFieldVisible('mrp') && (
+          <div className="mt-0.5 flex items-baseline gap-2 whitespace-nowrap">
+            <span style={titleTextStyle}>{getFieldLabel('mrp', 'MRP')}</span>
+            <span className={isShortAio ? 'text-[11pt] leading-none' : 'text-[15pt] leading-none'} style={valueTextStyle}>{currency}</span>
+            <span style={valueTextStyle}>{mrpValue}</span>
+            <span className={isShortAio ? 'text-[5.3pt]' : 'text-[6.5pt]'} style={valueTextStyle}>Incl.of all Taxes</span>
+          </div>
+        )}
+
+        {(isFieldVisible('product_number') || isFieldVisible('country_of_origin') || isFieldVisible('generic_name')) && (
+          <div className={isShortAio ? 'mt-2 space-y-0.5' : 'mt-3 space-y-1'}>
+            {isFieldVisible('product_number') && (
+              <div className="flex gap-2">
+                <span className="shrink-0" style={{ width: aioRowLabelWidth, ...titleTextStyle }}>{getFieldLabel('product_number', 'Product No')} :</span>
+                <span className="min-w-0 break-words" style={valueTextStyle}>{snapshot.productNumber || 'D2UP4PT#ACJ'}</span>
+              </div>
+            )}
+            {isFieldVisible('country_of_origin') && (
+              <div className="flex gap-2">
+                <span className="shrink-0" style={{ width: aioRowLabelWidth, ...titleTextStyle }}>{getFieldLabel('country_of_origin', 'Country of Origin')} :</span>
+                <span className="min-w-0 break-words" style={valueTextStyle}>{snapshot.countryOfOrigin || 'India'}</span>
+              </div>
+            )}
+            {isFieldVisible('generic_name') && (
+              <div className="flex gap-2">
+                <span className="shrink-0" style={{ width: aioRowLabelWidth, ...titleTextStyle }}>{getFieldLabel('generic_name', 'Generic Name')} :</span>
+                <span className="min-w-0 break-words" style={valueTextStyle}>{snapshot.genericName || 'ALL IN ONE COMPUTER'}</span>
+              </div>
+            )}
+          </div>
+        )}
+
+        {isFieldVisible('net_quantity') && <div className={isShortAio ? 'mt-2 text-[10pt]' : 'mt-4 text-[12pt]'}><span style={titleTextStyle}>{getFieldLabel('net_quantity', 'Net Qty')}:&nbsp;&nbsp;</span>{labelValue(snapshot.netQuantity || '1 N')}</div>}
+
+        {isFieldVisible('pack_contents') && (
+          <div className={isShortAio ? 'mt-4 whitespace-pre-line' : 'mt-6 whitespace-pre-line'} style={{ fontSize: packTextSize, lineHeight: isShortAio ? 1.1 : 1.18, ...valueTextStyle }}>
+            [{snapshot.packContents || '60.45 CM ALL IN ONE COMPUTER 1N,\nCENTRAL PROCESSING UNIT 1N,\nCABLE SET 1N,\nTOWERSTAND 1N,KEYBOARD 1N,MOUSE 1N'}]
+          </div>
+        )}
 
         {customSections.length > 0 && (
           <div className={isShortAio ? 'mt-2 space-y-0.5 text-[6.3pt]' : 'mt-3 space-y-1 text-[7.5pt]'}>

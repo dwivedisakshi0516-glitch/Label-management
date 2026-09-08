@@ -60,12 +60,12 @@ const SAMPLE_SNAPSHOT_DATA: LabelSnapshot = {
   year: '2026',
 };
 
-const toFieldKey = (label: string) =>
+const toFieldKey = (label: string, fallback = `custom_field_${Date.now()}`) =>
   label
     .trim()
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '_')
-    .replace(/^_+|_+$/g, '') || `custom_field_${Date.now()}`;
+    .replace(/^_+|_+$/g, '') || fallback;
 
 const DEFAULT_FIELD_KEYS = new Set(DEFAULT_TEMPLATE_FIELDS.map((field) => field.key));
 
@@ -238,7 +238,7 @@ export const Templates: React.FC = () => {
     }
     const normalizedFields = fields.map((field, idx) => ({
       ...field,
-      key: toFieldKey(field.key || field.label),
+      key: toFieldKey(field.key || field.label, `field_${idx + 1}`),
       label: field.label.trim() || `Field ${idx + 1}`,
       order: idx + 1,
     }));
@@ -541,7 +541,7 @@ export const Templates: React.FC = () => {
                 <div className="border border-slate-200 rounded-xl overflow-hidden divide-y divide-slate-100">
                   {fields.map((f, idx) => (
                     <div
-                      key={f.key}
+                      key={DEFAULT_FIELD_KEYS.has(f.key) ? f.key : `custom-field-${idx}`}
                       className={`p-3 flex items-center justify-between gap-3 transition ${
                         f.enabled ? 'bg-white' : 'bg-slate-50/70 opacity-60'
                       }`}
@@ -574,7 +574,7 @@ export const Templates: React.FC = () => {
                               <input
                                 type="text"
                                 value={f.key}
-                                onChange={(e) => updateFieldProperty(idx, 'key', toFieldKey(e.target.value))}
+                                onChange={(e) => updateFieldProperty(idx, 'key', e.target.value)}
                                 className="text-[10px] text-slate-500 block font-mono bg-slate-50 border border-slate-200 rounded px-1 py-0.5 focus:outline-hidden focus:ring-1 focus:ring-blue-500"
                                 aria-label="Custom field key"
                               />

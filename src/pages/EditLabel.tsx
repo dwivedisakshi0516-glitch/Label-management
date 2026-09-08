@@ -171,8 +171,7 @@ const CATEGORY_CUSTOM_FIELDS = {
     { key: 'importer_name', label: 'Importers Name & Address', enabled: true, font_size: 9, bold: true, alignment: 'left' as const, order: 14, default_value: '' },
     { key: 'imported_in', label: 'Imported In', enabled: true, font_size: 9, bold: false, alignment: 'left' as const, order: 15, default_value: '' },
     { key: 'customer_care_other_numbers', label: 'Customer Care - Other Numbers', enabled: true, font_size: 9, bold: false, alignment: 'left' as const, order: 16, default_value: '' },
-    { key: 'barcode_text', label: 'Barcode', enabled: true, font_size: 10, bold: true, alignment: 'left' as const, order: 17, default_value: '' },
-    { key: 'recycling_information', label: 'Recycling Information', enabled: true, font_size: 8, bold: false, alignment: 'left' as const, order: 18, default_value: '' },
+    { key: 'recycling_information', label: 'Recycling Information', enabled: true, font_size: 8, bold: false, alignment: 'left' as const, order: 17, default_value: '' },
   ],
   desktop: [
     { key: 'manufactured_for_name', label: 'Manufactured For Name', enabled: true, font_size: 10, bold: true, alignment: 'left' as const, order: 14, default_value: 'HP India Sales Private Ltd.' },
@@ -320,10 +319,10 @@ export const EditLabel: React.FC<EditLabelProps> = ({
     const fallbackCustomFields = CATEGORY_CUSTOM_FIELDS[layoutStyle as 'aio' | 'printer' | 'desktop'] || [];
     const snapshotFields = s.fields || [];
     const snapshotFieldKeys = new Set(snapshotFields.map((field) => field.key));
-    setTemplateFields([
-      ...snapshotFields,
-      ...fallbackCustomFields.filter((field) => !snapshotFieldKeys.has(field.key)),
-    ]);
+    setTemplateFields(snapshotFields.length > 0
+      ? snapshotFields
+      : fallbackCustomFields.filter((field) => !snapshotFieldKeys.has(field.key))
+    );
     setCustomFieldValues(
       Object.keys(s)
         .filter((key) => !BUILT_IN_TEMPLATE_KEYS.has(key) && !['width_mm', 'height_mm', 'fields', 'layoutStyle', 'customSections', 'labelStyle'].includes(key))
@@ -400,7 +399,40 @@ export const EditLabel: React.FC<EditLabelProps> = ({
     customSections: customSections.filter((section) => section.heading.trim() || section.content.trim()),
   };
 
-  const customTemplateFields = templateFields.filter((field) => !BUILT_IN_TEMPLATE_KEYS.has(field.key));
+  const customTemplateFields = templateFields.filter((field) => field.enabled && !BUILT_IN_TEMPLATE_KEYS.has(field.key));
+
+  const handleCustomFieldLabelChange = (fieldKey: string, label: string) => {
+    setTemplateFields(templateFields.map((field) =>
+      field.key === fieldKey ? { ...field, label } : field
+    ));
+  };
+
+  const handleRemoveCustomField = (fieldKey: string) => {
+    setTemplateFields(templateFields.filter((field) => field.key !== fieldKey));
+    setCustomFieldValues(({ [fieldKey]: _removed, ...remainingValues }) => remainingValues);
+  };
+
+  const handleAddCustomField = () => {
+    const nextNumber = templateFields.filter((field) => field.key.startsWith('custom_field_')).length + 1;
+    const key = `custom_field_${Date.now()}_${nextNumber}`;
+    setTemplateFields([
+      ...templateFields,
+      {
+        key,
+        label: `Custom Field ${nextNumber}`,
+        enabled: true,
+        font_size: 10,
+        bold: false,
+        alignment: 'left',
+        default_value: '',
+        order: templateFields.length + 1,
+      },
+    ]);
+    setCustomFieldValues({
+      ...customFieldValues,
+      [key]: '',
+    });
+  };
 
   const selectedPresetValue =
     LABEL_SIZE_PRESETS.find(
@@ -482,14 +514,14 @@ export const EditLabel: React.FC<EditLabelProps> = ({
         <div className="flex items-center gap-2 self-start sm:self-auto">
           <button
             onClick={() => setIsPreviewModalOpen(true)}
-            className="flex items-center gap-1.5 px-3.5 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl text-xs sm:text-sm font-semibold transition cursor-pointer"
+            className="flex items-center gap-1.5 px-3.5 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-[3px] text-xs sm:text-sm font-semibold transition cursor-pointer"
           >
             <Eye className="w-4 h-4" />
             <span>Print Preview</span>
           </button>
           <button
             onClick={handlePrint}
-            className="flex items-center gap-2 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs sm:text-sm font-semibold shadow-sm transition cursor-pointer"
+            className="flex items-center gap-2 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-[3px] text-xs sm:text-sm font-semibold shadow-sm transition cursor-pointer"
           >
             <Printer className="w-4 h-4" />
             <span>Print ({copies})</span>
@@ -934,21 +966,53 @@ export const EditLabel: React.FC<EditLabelProps> = ({
                     <h3 className="text-sm font-bold text-slate-900">Custom</h3>
                     <p className="text-xs text-slate-500">Add extra label headings and field content for this label.</p>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => setCustomSections([...customSections, { heading: '', content: '' }])}
-                    className="inline-flex items-center gap-1.5 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold transition cursor-pointer"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                    <span>Add Section</span>
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={handleAddCustomField}
+                      className="inline-flex items-center gap-1.5 px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-xl text-xs font-semibold transition cursor-pointer"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Add Field</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setCustomSections([...customSections, { heading: '', content: '' }])}
+                      className="inline-flex items-center gap-1.5 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold transition cursor-pointer"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Add Section</span>
+                    </button>
+                  </div>
                 </div>
 
                 {customTemplateFields.length > 0 ? (
                   customTemplateFields.map((field) => (
-                    <div key={field.key}>
+                    <div key={field.key} className="rounded-xl border border-slate-200 bg-slate-50 p-3 space-y-2">
+                      <div className="flex items-end gap-2">
+                        <label className="flex-1">
+                          <span className="block font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                            Label Title
+                          </span>
+                          <input
+                            type="text"
+                            value={field.label}
+                            onChange={(e) => handleCustomFieldLabelChange(field.key, e.target.value)}
+                            placeholder="Custom field title"
+                            className="w-full px-3.5 py-2 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:ring-2 focus:ring-blue-500 focus:bg-white focus:outline-hidden"
+                          />
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveCustomField(field.key)}
+                          className="mb-px p-2.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition cursor-pointer"
+                          title="Remove custom field"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                       <label className="block font-semibold text-slate-700 uppercase tracking-wider mb-1">
-                        {field.label}
+                        Field Content
                       </label>
                       <textarea
                         rows={field.key.includes('address') || field.key.includes('information') ? 3 : 2}
@@ -959,7 +1023,7 @@ export const EditLabel: React.FC<EditLabelProps> = ({
                             [field.key]: e.target.value,
                           })
                         }
-                        className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:ring-2 focus:ring-blue-500 focus:bg-white focus:outline-hidden leading-relaxed"
+                        className="w-full px-3.5 py-2 bg-white border border-slate-200 rounded-xl text-sm text-slate-900 focus:ring-2 focus:ring-blue-500 focus:bg-white focus:outline-hidden leading-relaxed"
                       />
                     </div>
                   ))
@@ -1021,8 +1085,8 @@ export const EditLabel: React.FC<EditLabelProps> = ({
               </div>
             )}
 
-            <div className="flex flex-wrap items-center gap-3 pt-4 border-t border-slate-100">
-              <button type="button" onClick={handleSaveUpdatedLabel} disabled={isSaving} className="flex-1 py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs sm:text-sm rounded-xl shadow-md shadow-blue-500/20 transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50">
+            <div className="flex flex-wrap items-center justify-end gap-3 pt-4 border-t border-slate-100">
+              <button type="button" onClick={handleSaveUpdatedLabel} disabled={isSaving} className="py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs sm:text-sm rounded-[3px] shadow-sm shadow-blue-500/20 transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50">
                 {isSaving ? (
                   <>
                     <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -1035,11 +1099,11 @@ export const EditLabel: React.FC<EditLabelProps> = ({
                   </>
                 )}
               </button>
-              <button type="button" onClick={() => setIsPreviewModalOpen(true)} className="py-3 px-4 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 font-semibold text-xs sm:text-sm rounded-xl transition flex items-center justify-center gap-2 cursor-pointer">
+              <button type="button" onClick={() => setIsPreviewModalOpen(true)} className="py-2.5 px-4 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 font-semibold text-xs sm:text-sm rounded-[3px] transition flex items-center justify-center gap-2 cursor-pointer">
                 <Eye className="w-4 h-4" />
                 <span>Print Preview</span>
               </button>
-              <button type="button" onClick={handlePrint} className="py-3 px-5 bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs sm:text-sm rounded-xl shadow-md shadow-slate-900/20 transition flex items-center justify-center gap-2 cursor-pointer">
+              <button type="button" onClick={handlePrint} className="py-2.5 px-4 bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs sm:text-sm rounded-[3px] shadow-sm shadow-slate-900/20 transition flex items-center justify-center gap-2 cursor-pointer">
                 <Printer className="w-4 h-4" />
                 <span>Print ({copies})</span>
               </button>

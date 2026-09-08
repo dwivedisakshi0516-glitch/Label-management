@@ -48,20 +48,9 @@ async def create_template(tpl: TemplateCreate):
 async def update_template(tpl_id: str, tpl_update: TemplateUpdate):
     coll = db_manager.get_collection("label_templates")
     update_data = {k: v for k, v in tpl_update.model_dump(exclude_unset=True).items() if v is not None}
-    lookup = {"$or": [{"id": tpl_id}]}
-    if update_data.get("name"):
-        lookup["$or"].append({"name": update_data["name"]})
-    existing = await coll.find_one(lookup)
+    existing = await coll.find_one({"id": tpl_id})
     if not existing:
-        now = datetime.datetime.utcnow().isoformat()
-        doc_data = {
-            **update_data,
-            "id": tpl_id,
-            "created_at": now,
-            "updated_at": now
-        }
-        await coll.insert_one(doc_data)
-        return TemplateResponse(**doc_data)
+        raise HTTPException(status_code=404, detail="Template not found")
 
     update_data["updated_at"] = datetime.datetime.utcnow().isoformat()
 

@@ -65,8 +65,7 @@ const PRINTER_TEMPLATE_FIELDS = [
   { key: 'importer_name', label: 'Importers Name & Address', enabled: true, font_size: 9, bold: true, alignment: 'left' as const, order: 14, default_value: '' },
   { key: 'imported_in', label: 'Imported In', enabled: true, font_size: 9, bold: false, alignment: 'left' as const, order: 15, default_value: 'January 2026' },
   { key: 'customer_care_other_numbers', label: 'Customer Care - Other Numbers', enabled: true, font_size: 9, bold: false, alignment: 'left' as const, order: 16, default_value: '' },
-  { key: 'barcode_text', label: 'Barcode', enabled: true, font_size: 10, bold: true, alignment: 'left' as const, order: 17, default_value: '8C5L5L00145' },
-  { key: 'recycling_information', label: 'Recycling Information', enabled: true, font_size: 8, bold: false, alignment: 'left' as const, order: 18, default_value: 'For Recycling of your product, please visit: www.brother.in' },
+  { key: 'recycling_information', label: 'Recycling Information', enabled: true, font_size: 8, bold: false, alignment: 'left' as const, order: 17, default_value: 'For Recycling of your product, please visit: www.brother.in' },
 ];
 
 const AIO_TEMPLATE_FIELDS = [
@@ -84,7 +83,6 @@ const getPrinterCustomDefaults = () => ({
   importer_name: 'BROTHER INTERNATIONAL (INDIA) PVT LTD, NOS. 801 AND 802, 8TH FLOOR, ALPHA BUILDING, HIRANANDANI GARDENS, POWAI, MUMBAI - 400 076, MAHARASHTRA',
   imported_in: 'January 2026',
   customer_care_other_numbers: '1800 209 8904 (OTHER LANDLINE AND MOBILE CUSTOMERS)',
-  barcode_text: '8C5L5L00145',
   recycling_information: 'For Recycling of your product, please visit: www.brother.in',
 });
 
@@ -101,7 +99,7 @@ const getDesktopCustomDefaults = () => ({
 
 const withPrinterFields = (fields: LabelTemplate['fields'] = [], productNumber = '', genericName = '') => {
   const isPrinterLabel = productNumber.toUpperCase().includes('DCP-L5660DN') || genericName.toUpperCase().includes('LASER MFC PRINTER');
-  if (!isPrinterLabel) return fields;
+  if (!isPrinterLabel || fields.length > 0) return fields;
   const existingKeys = new Set(fields.map((field) => field.key));
   return [
     ...fields,
@@ -112,7 +110,7 @@ const withPrinterFields = (fields: LabelTemplate['fields'] = [], productNumber =
 const withAioFields = (fields: LabelTemplate['fields'] = [], productNumber = '', genericName = '') => {
   const normalizedGenericName = genericName.toUpperCase().replace(/-/g, ' ');
   const isAioLabel = productNumber.toUpperCase().includes('D2UP4PT') || normalizedGenericName.includes('ALL IN ONE COMPUTER');
-  if (!isAioLabel) return fields;
+  if (!isAioLabel || fields.length > 0) return fields;
   const existingKeys = new Set(fields.map((field) => field.key));
   return [
     ...fields,
@@ -124,7 +122,7 @@ const withDesktopFields = (fields: LabelTemplate['fields'] = [], categoryName = 
   const category = categoryName.toLowerCase();
   const normalizedGenericName = genericName.toUpperCase().replace(/-/g, ' ');
   const isDesktopLabel = category.includes('desktop') || normalizedGenericName === 'DESKTOP COMPUTER';
-  if (!isDesktopLabel) return fields;
+  if (!isDesktopLabel || fields.length > 0) return fields;
   const existingKeys = new Set(fields.map((field) => field.key));
   return [
     ...fields,
@@ -467,7 +465,7 @@ export const CreateLabel: React.FC<CreateLabelProps> = ({
 
     const activeFields = matchedTemplate?.fields || selectedTemplateFields;
     const importedCustomValues = activeFields
-      .filter((field) => !BUILT_IN_TEMPLATE_KEYS.has(field.key))
+      .filter((field) => field.enabled && !BUILT_IN_TEMPLATE_KEYS.has(field.key))
       .reduce<Record<string, string>>((values, field) => {
         values[field.key] = getImportedValue(row, [field.key, field.label]) || field.default_value || '';
         return values;
@@ -491,7 +489,7 @@ export const CreateLabel: React.FC<CreateLabelProps> = ({
     selectedCategoryName,
     genericName
   );
-  const customTemplateFields = selectedTemplateFields.filter((field) => !BUILT_IN_TEMPLATE_KEYS.has(field.key));
+  const customTemplateFields = selectedTemplateFields.filter((field) => field.enabled && !BUILT_IN_TEMPLATE_KEYS.has(field.key));
   const selectedTemplate = templates.find((t) => t.id === selectedTemplateId);
   const layoutStyle =
     selectedTemplate?.category_id === selectedCategoryId
