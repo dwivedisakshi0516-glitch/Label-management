@@ -1,6 +1,8 @@
 import logging
 import asyncio
 import os
+import json
+from pathlib import Path
 from typing import Optional, Dict, Any, List
 from pymongo import MongoClient
 from backend.app.core.config import settings
@@ -8,22 +10,84 @@ from backend.app.core.config import settings
 logger = logging.getLogger(__name__)
 
 class FallbackAsyncCollection:
-    """In-memory async fallback collection if MongoDB daemon is unreachable."""
-    def __init__(self, name: str):
+    """File-backed async fallback collection if MongoDB daemon is unreachable."""
+    def __init__(self, name: str, owner: "Database"):
         self.name = name
-        self._data: List[Dict[str, Any]] = []
+        self._owner = owner
+        self._data: List[Dict[str, Any]] = owner._fallback_data.setdefault(name, [])
+
+    def _matches(self, item: Dict[str, Any], filter_query: Dict[str, Any]) -> bool:
+        for key, value in filter_query.items():
+            if key == "$or" and isinstance(value, list):
+                if not any(self._matches(item, condition) for condition in value):
+                    return False
+                continue
+            if isinstance(value, dict) and "$regex" in value:
+                import re
+                flags = re.IGNORECASE if value.get("$options") == "i" else 0
+                if not re.search(value["$regex"], str(item.get(key, "")), flags):
+                    return False
+                continue
+            if key == "_id":
+                if str(item.get("_id")) != str(value) and str(item.get("id")) != str(value):
+                    return False
+                continue
+            if item.get(key) != value:
+                return False
+        return True
+
+    def _set_nested(self, item: Dict[str, Any], key: str, value: Any) -> None:
+        parts = key.split(".")
+        target = item
+        for part in parts[:-1]:
+            child = target.get(part)
+            if not isinstance(child, dict):
+                child = {}
+                target[part] = child
+            target = child
+        target[parts[-1]] = value
+
+    def _unset_nested(self, item: Dict[str, Any], key: str) -> None:
+        parts = key.split(".")
+        target = item
+        for part in parts[:-1]:
+            target = target.get(part)
+            if not isinstance(target, dict):
+                return
+        target.pop(parts[-1], None)
+
+    def _pull_nested(self, item: Dict[str, Any], key: str, condition: Any) -> None:
+        parts = key.split(".")
+        target = item
+        for part in parts[:-1]:
+            target = target.get(part)
+            if not isinstance(target, dict):
+                return
+        current = target.get(parts[-1])
+        if not isinstance(current, list):
+            return
+        if isinstance(condition, dict):
+            target[parts[-1]] = [
+                value for value in current
+                if not (isinstance(value, dict) and all(value.get(k) == v for k, v in condition.items()))
+            ]
+        else:
+            target[parts[-1]] = [value for value in current if value != condition]
+
+    def _apply_update(self, item: Dict[str, Any], update_query: Dict[str, Any]) -> None:
+        if "$set" in update_query:
+            for key, value in update_query["$set"].items():
+                self._set_nested(item, key, value)
+        if "$unset" in update_query:
+            for key in update_query["$unset"].keys():
+                self._unset_nested(item, key)
+        if "$pull" in update_query:
+            for key, condition in update_query["$pull"].items():
+                self._pull_nested(item, key, condition)
 
     async def find_one(self, filter_query: Dict[str, Any], projection: Optional[Dict[str, Any]] = None) -> Optional[Dict[str, Any]]:
         for item in self._data:
-            match = True
-            for k, v in filter_query.items():
-                if k == "_id" and str(item.get("_id")) != str(v) and str(item.get("id")) != str(v):
-                    match = False
-                    break
-                elif k != "_id" and item.get(k) != v:
-                    match = False
-                    break
-            if match:
+            if self._matches(item, filter_query):
                 return dict(item)
         return None
 
@@ -49,6 +113,10 @@ class FallbackAsyncCollection:
                 self._data = self._data[:count]
                 return self
 
+            def skip(self, count: int):
+                self._data = self._data[count:]
+                return self
+
             def __aiter__(self):
                 return self
 
@@ -67,40 +135,7 @@ class FallbackAsyncCollection:
 
         filtered = []
         for item in self._data:
-            match = True
-            for k, v in filter_query.items():
-                if k == "$or" and isinstance(v, list):
-                    or_match = False
-                    for condition in v:
-                        cond_ok = True
-                        for ck, cv in condition.items():
-                            if isinstance(cv, dict) and "$regex" in cv:
-                                import re
-                                regex_val = cv["$regex"]
-                                flags = re.IGNORECASE if cv.get("$options") == "i" else 0
-                                if not re.search(regex_val, str(item.get(ck, "")), flags):
-                                    cond_ok = False
-                                    break
-                            elif item.get(ck) != cv:
-                                cond_ok = False
-                                break
-                        if cond_ok:
-                            or_match = True
-                            break
-                    if not or_match:
-                        match = False
-                        break
-                elif isinstance(v, dict) and "$regex" in v:
-                    import re
-                    regex_val = v["$regex"]
-                    flags = re.IGNORECASE if v.get("$options") == "i" else 0
-                    if not re.search(regex_val, str(item.get(k, "")), flags):
-                        match = False
-                        break
-                elif item.get(k) != v:
-                    match = False
-                    break
-            if match:
+            if self._matches(item, filter_query):
                 filtered.append(item)
         return AsyncCursor(filtered)
 
@@ -110,40 +145,45 @@ class FallbackAsyncCollection:
             import uuid
             doc_copy["_id"] = str(uuid.uuid4())
         self._data.append(doc_copy)
+        self._owner._save_fallback_data()
         class InsertResult:
             def __init__(self, inserted_id):
                 self.inserted_id = inserted_id
         return InsertResult(doc_copy["_id"])
 
     async def update_one(self, filter_query: Dict[str, Any], update_query: Dict[str, Any]):
-        doc = await self.find_one(filter_query)
-        if doc:
-            for item in self._data:
-                if (filter_query.get("_id") and (str(item.get("_id")) == str(filter_query["_id"]) or str(item.get("id")) == str(filter_query["_id"]))) or \
-                   (filter_query.get("id") and item.get("id") == filter_query["id"]):
-                    if "$set" in update_query:
-                        item.update(update_query["$set"])
-                    class UpdateResult:
-                        matched_count = 1
-                        modified_count = 1
-                    return UpdateResult()
+        for item in self._data:
+            if self._matches(item, filter_query):
+                self._apply_update(item, update_query)
+                self._owner._save_fallback_data()
+                class UpdateResult:
+                    matched_count = 1
+                    modified_count = 1
+                return UpdateResult()
         class UpdateResult:
             matched_count = 0
             modified_count = 0
         return UpdateResult()
 
+    async def update_many(self, filter_query: Dict[str, Any], update_query: Dict[str, Any]):
+        matched_count = 0
+        for item in self._data:
+            if self._matches(item, filter_query):
+                self._apply_update(item, update_query)
+                matched_count += 1
+        if matched_count:
+            self._owner._save_fallback_data()
+        class UpdateResult:
+            def __init__(self, count: int):
+                self.matched_count = count
+                self.modified_count = count
+        return UpdateResult(matched_count)
+
     async def delete_one(self, filter_query: Dict[str, Any]):
         for idx, item in enumerate(self._data):
-            match = True
-            for k, v in filter_query.items():
-                if k == "_id" and str(item.get("_id")) != str(v) and str(item.get("id")) != str(v):
-                    match = False
-                    break
-                elif k != "_id" and item.get(k) != v:
-                    match = False
-                    break
-            if match:
+            if self._matches(item, filter_query):
                 self._data.pop(idx)
+                self._owner._save_fallback_data()
                 class DeleteResult:
                     deleted_count = 1
                 return DeleteResult()
@@ -180,6 +220,10 @@ class SyncAsyncCollection:
                 self._cursor = self._cursor.limit(count)
                 return self
 
+            def skip(self, count: int):
+                self._cursor = self._cursor.skip(count)
+                return self
+
             def __aiter__(self):
                 self._iterator = iter(self._cursor)
                 return self
@@ -203,6 +247,9 @@ class SyncAsyncCollection:
     async def update_one(self, filter_query: Dict[str, Any], update_query: Dict[str, Any]):
         return self._collection.update_one(filter_query, update_query)
 
+    async def update_many(self, filter_query: Dict[str, Any], update_query: Dict[str, Any]):
+        return self._collection.update_many(filter_query, update_query)
+
     async def delete_one(self, filter_query: Dict[str, Any]):
         return self._collection.delete_one(filter_query)
 
@@ -217,6 +264,22 @@ class Database:
     _fallback_collections: Dict[str, FallbackAsyncCollection] = {}
     _live_collections: Dict[str, SyncAsyncCollection] = {}
     _connect_lock: Optional[asyncio.Lock] = None
+    _fallback_path: Path = Path(".data") / "fallback_db.json"
+    _fallback_data: Dict[str, List[Dict[str, Any]]] = {}
+
+    def _load_fallback_data(self):
+        if self._fallback_data:
+            return
+        try:
+            if self._fallback_path.exists():
+                self._fallback_data = json.loads(self._fallback_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as exc:
+            logger.warning("Could not load fallback database file (%s). Starting with an empty fallback store.", exc)
+            self._fallback_data = {}
+
+    def _save_fallback_data(self):
+        self._fallback_path.parent.mkdir(parents=True, exist_ok=True)
+        self._fallback_path.write_text(json.dumps(self._fallback_data, ensure_ascii=False, indent=2), encoding="utf-8")
 
     def get_collection(self, name: str):
         if not self.is_fallback and self.db is not None:
@@ -224,7 +287,8 @@ class Database:
                 self._live_collections[name] = SyncAsyncCollection(self.db[name])
             return self._live_collections[name]
         if name not in self._fallback_collections:
-            self._fallback_collections[name] = FallbackAsyncCollection(name)
+            self._load_fallback_data()
+            self._fallback_collections[name] = FallbackAsyncCollection(name, self)
         return self._fallback_collections[name]
 
     async def ensure_connected(self):

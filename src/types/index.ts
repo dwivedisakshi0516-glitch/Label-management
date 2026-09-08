@@ -26,6 +26,7 @@ export interface Category {
   default_country_of_origin?: string;
   default_net_qty?: string;
   default_pack_contents?: string;
+  product_count?: number;
   created_at?: string;
   updated_at?: string;
 }
@@ -75,6 +76,11 @@ export interface Product {
   product_number?: string;
   manufacturer_id: string;
   manufacturer_name?: string;
+  manufacturer_address?: string;
+  importer_name?: string;
+  imported_in?: string;
+  customer_care_other_numbers?: string;
+  recycling_information?: string;
   customer_care_id?: string;
   customer_care_name?: string;
   warranty_id?: string;

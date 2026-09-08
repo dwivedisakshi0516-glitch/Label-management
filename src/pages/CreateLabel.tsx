@@ -79,11 +79,11 @@ const DESKTOP_TEMPLATE_FIELDS = [
   { key: 'generic_note', label: 'Generic Name Note', enabled: true, font_size: 9, bold: false, alignment: 'left' as const, order: 16, default_value: '(EXCLUDING MONITOR)' },
 ];
 
-const getPrinterCustomDefaults = () => ({
-  importer_name: 'BROTHER INTERNATIONAL (INDIA) PVT LTD, NOS. 801 AND 802, 8TH FLOOR, ALPHA BUILDING, HIRANANDANI GARDENS, POWAI, MUMBAI - 400 076, MAHARASHTRA',
-  imported_in: 'January 2026',
-  customer_care_other_numbers: '1800 209 8904 (OTHER LANDLINE AND MOBILE CUSTOMERS)',
-  recycling_information: 'For Recycling of your product, please visit: www.brother.in',
+const getPrinterCustomDefaults = (product?: Product) => ({
+  importer_name: product?.importer_name || 'BROTHER INTERNATIONAL (INDIA) PVT LTD, NOS. 801 AND 802, 8TH FLOOR, ALPHA BUILDING, HIRANANDANI GARDENS, POWAI, MUMBAI - 400 076, MAHARASHTRA',
+  imported_in: product?.imported_in || (product?.product_number?.toUpperCase().includes('HL-L5210DN') ? 'January 2025' : product?.product_number?.toUpperCase().includes('DCP-L3560CDW') ? 'July 2026' : 'January 2026'),
+  customer_care_other_numbers: product?.customer_care_other_numbers || '1800 209 8904 (OTHER LANDLINE AND MOBILE CUSTOMERS)',
+  recycling_information: product?.recycling_information || 'For Recycling of your product, please visit: www.brother.in',
 });
 
 const getAioCustomDefaults = () => ({
@@ -98,7 +98,7 @@ const getDesktopCustomDefaults = () => ({
 });
 
 const withPrinterFields = (fields: LabelTemplate['fields'] = [], productNumber = '', genericName = '') => {
-  const isPrinterLabel = productNumber.toUpperCase().includes('DCP-L5660DN') || genericName.toUpperCase().includes('LASER MFC PRINTER');
+  const isPrinterLabel = productNumber.toUpperCase().includes('DCP-') || productNumber.toUpperCase().includes('HL-') || genericName.toUpperCase().includes('PRINTER');
   if (!isPrinterLabel || fields.length > 0) return fields;
   const existingKeys = new Set(fields.map((field) => field.key));
   return [
@@ -136,7 +136,7 @@ const getCategoryLayoutStyle = (categoryName = '', productNumber = '', genericNa
   if (category.includes('printer')) return 'printer';
   if (category.includes('aio') || normalizedGeneric.includes('ALL IN ONE COMPUTER')) return 'aio';
   if (category.includes('desktop') || normalizedGeneric === 'DESKTOP COMPUTER') return 'desktop';
-  if (productNumber.toUpperCase().includes('DCP-L5660DN')) return 'printer';
+  if (productNumber.toUpperCase().includes('DCP-') || productNumber.toUpperCase().includes('HL-')) return 'printer';
   return 'standard';
 };
 
@@ -316,7 +316,7 @@ export const CreateLabel: React.FC<CreateLabelProps> = ({
   };
 
   const handleProductSelect = async (prod: Product, cat?: Category, tpl?: LabelTemplate) => {
-    const isPrinterProduct = Boolean(prod.product_number?.toUpperCase().includes('DCP-L5660DN') || prod.generic_name?.toUpperCase().includes('LASER MFC PRINTER'));
+    const isPrinterProduct = Boolean(cat?.name?.toLowerCase().includes('printer') || prod.category_name?.toLowerCase().includes('printer') || prod.generic_name?.toUpperCase().includes('PRINTER'));
     const isDesktopProduct = Boolean(cat?.name?.toLowerCase().includes('desktop') || prod.generic_name?.toUpperCase().replace(/-/g, ' ') === 'DESKTOP COMPUTER');
 
     setSelectedProductId(prod.id);
@@ -331,12 +331,14 @@ export const CreateLabel: React.FC<CreateLabelProps> = ({
     setWarranty(prod.warranty_name || cat?.default_warranty || '5 Years');
     setPackContents(prod.pack_contents || cat?.default_pack_contents || '');
     if (isPrinterProduct) {
-      setMonth('January');
-      setYear('2026');
+      const importedIn = getPrinterCustomDefaults(prod).imported_in;
+      const [importedMonth, importedYear] = importedIn.split(' ');
+      setMonth(importedMonth || 'January');
+      setYear(importedYear || '2026');
       setCustomFieldValues((current) => ({
         ...current,
         ...Object.fromEntries(
-          Object.entries(getPrinterCustomDefaults()).filter(([key]) => !current[key])
+          Object.entries(getPrinterCustomDefaults(prod)).filter(([key]) => !current[key])
         ),
       }));
     }
@@ -361,7 +363,7 @@ export const CreateLabel: React.FC<CreateLabelProps> = ({
         const mfg = mfgs.find((m) => m.id === prod.manufacturer_id);
         if (mfg) {
           setManufacturerName(mfg.name);
-          setManufacturerAddress([mfg.address, mfg.city, mfg.state, mfg.pincode].filter(Boolean).join(', '));
+          setManufacturerAddress(prod.manufacturer_address || [mfg.address, mfg.city, mfg.state, mfg.pincode].filter(Boolean).join(', '));
         }
       } catch (e) {
         console.error('Error fetching manufacturer details', e);

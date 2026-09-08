@@ -80,5 +80,5 @@ async def health_check():
         "message": "RIT Label Suite API is fully operational",
         "database": "live" if not db_manager.is_fallback else "fallback",
         "database_name": settings.DATABASE_NAME if not db_manager.is_fallback else None,
-        "database_warning": "Using temporary fallback store. Check Atlas Network Access for Vercel outbound IPs." if db_manager.is_fallback else None,
+        "database_warning": "Using file-backed fallback store because MongoDB is unavailable. Start MongoDB or set MONGODB_URL to use the primary database." if db_manager.is_fallback else None,
     }

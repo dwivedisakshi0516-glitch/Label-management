@@ -33,7 +33,7 @@ export const PrintableLabel: React.FC<PrintableLabelProps> = ({
   const labelStyle = snapshot.labelStyle || {};
   const isPrinterStyle =
     layoutStyle === 'printer' ||
-    String(snapshot.genericName || '').toUpperCase().includes('LASER MFC PRINTER');
+    String(snapshot.genericName || '').toUpperCase().includes('PRINTER');
   const isAioStyle =
     layoutStyle === 'aio' ||
     String(snapshot.genericName || '').toUpperCase().replace(/-/g, ' ').includes('ALL IN ONE COMPUTER') ||

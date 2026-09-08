@@ -1,15 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { Layers, Plus, Search, Edit2, Trash2, X, Check, AlertCircle } from 'lucide-react';
+import { Layers, Plus, Search, Edit2, Trash2, X, ArrowDown, ArrowUp, ArrowUpDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Category } from '../types';
-import { categoriesApi } from '../services/api';
+import { categoriesApi, productsApi } from '../services/api';
 import { useToast } from '../context/ToastContext';
 import { DeleteModal } from '../components/common/DeleteModal';
 
 export const Categories: React.FC = () => {
   const toast = useToast();
   const [categories, setCategories] = useState<Category[]>([]);
+  const [productCounts, setProductCounts] = useState<Record<string, number>>({});
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(50);
+  const [totalItems, setTotalItems] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const [sortBy, setSortBy] = useState('name');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -31,19 +38,75 @@ export const Categories: React.FC = () => {
 
   useEffect(() => {
     loadCategories();
-  }, [searchQuery]);
+  }, [searchQuery, page, pageSize, sortBy, sortOrder]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [searchQuery, pageSize]);
 
   const loadCategories = async () => {
     try {
       setIsLoading(true);
-      const data = await categoriesApi.getAll(searchQuery);
-      setCategories(data);
+      const [categoryPage, products] = await Promise.all([
+        categoriesApi.getPage({
+          search: searchQuery,
+          page,
+          page_size: pageSize,
+          sort_by: sortBy,
+          sort_order: sortOrder,
+        }),
+        productsApi.getAll(),
+      ]);
+      const counts = products.reduce<Record<string, number>>((acc, product) => {
+        if (product.category_id) {
+          acc[product.category_id] = (acc[product.category_id] || 0) + 1;
+        }
+        if (product.category_name) {
+          const nameKey = product.category_name.toLowerCase();
+          acc[nameKey] = (acc[nameKey] || 0) + 1;
+        }
+        return acc;
+      }, {});
+      const pageItems = Array.isArray(categoryPage.items) ? categoryPage.items : [];
+      setCategories(pageItems);
+      setProductCounts(counts);
+      setTotalItems(Number(categoryPage.total) || pageItems.length);
+      setTotalPages(Math.max(1, Number(categoryPage.total_pages) || 1));
+      setPage(Math.max(1, Number(categoryPage.page) || 1));
     } catch (err: any) {
       toast.error('Failed to load categories.');
     } finally {
       setIsLoading(false);
     }
   };
+
+  const handleSort = (field: string) => {
+    setPage(1);
+    if (sortBy === field) {
+      setSortOrder((current) => current === 'asc' ? 'desc' : 'asc');
+      return;
+    }
+    setSortBy(field);
+    setSortOrder('asc');
+  };
+
+  const renderSortIcon = (field: string) => {
+    if (sortBy !== field) return <ArrowUpDown className="w-3.5 h-3.5 text-slate-400" />;
+    return sortOrder === 'asc'
+      ? <ArrowUp className="w-3.5 h-3.5 text-blue-600" />
+      : <ArrowDown className="w-3.5 h-3.5 text-blue-600" />;
+  };
+
+  const pageRange = () => {
+    const visiblePages = 5;
+    const half = Math.floor(visiblePages / 2);
+    const start = Math.max(1, Math.min(page - half, totalPages - visiblePages + 1));
+    const end = Math.min(totalPages, start + visiblePages - 1);
+    return Array.from({ length: end - start + 1 }, (_, index) => start + index);
+  };
+
+  const rangeStart = totalItems === 0 ? 0 : (page - 1) * pageSize + 1;
+  const rangeEnd = Math.min(page * pageSize, totalItems);
 
   const openCreateModal = () => {
     setEditingCategory(null);
@@ -155,21 +218,76 @@ export const Categories: React.FC = () => {
       {/* Categories Table */}
       <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
+          <table className="w-full min-w-[1080px] text-left text-xs table-fixed">
             <thead className="bg-slate-50 text-slate-600 uppercase tracking-wider font-semibold border-b border-slate-200/80">
               <tr>
-                <th className="py-3 px-5">Category Name</th>
-                <th className="py-3 px-5">Default Generic Name</th>
-                <th className="py-3 px-5">Default Warranty</th>
-                <th className="py-3 px-5">Origin</th>
-                <th className="py-3 px-5">Net Qty</th>
-                <th className="py-3 px-5 text-right">Actions</th>
+                <th className="py-3 px-5 w-[31%]">
+                  <button
+                    type="button"
+                    onClick={() => handleSort('name')}
+                    className="inline-flex items-center gap-1.5 font-semibold uppercase tracking-wider text-slate-600 transition hover:text-slate-900"
+                  >
+                    <span>Category Name</span>
+                    {renderSortIcon('name')}
+                  </button>
+                </th>
+                <th className="py-3 px-3 w-[8%] text-center">
+                  <button
+                    type="button"
+                    onClick={() => handleSort('product_count')}
+                    className="inline-flex items-center justify-center gap-1.5 font-semibold uppercase tracking-wider text-slate-600 transition hover:text-slate-900"
+                  >
+                    <span>Products</span>
+                    {renderSortIcon('product_count')}
+                  </button>
+                </th>
+                <th className="py-3 px-4 w-[22%]">
+                  <button
+                    type="button"
+                    onClick={() => handleSort('default_generic_name')}
+                    className="inline-flex items-center gap-1.5 font-semibold uppercase tracking-wider text-slate-600 transition hover:text-slate-900"
+                  >
+                    <span>Default Generic Name</span>
+                    {renderSortIcon('default_generic_name')}
+                  </button>
+                </th>
+                <th className="py-3 px-4 w-[13%]">
+                  <button
+                    type="button"
+                    onClick={() => handleSort('default_warranty')}
+                    className="inline-flex items-center gap-1.5 font-semibold uppercase tracking-wider text-slate-600 transition hover:text-slate-900"
+                  >
+                    <span>Default Warranty</span>
+                    {renderSortIcon('default_warranty')}
+                  </button>
+                </th>
+                <th className="py-3 px-4 w-[10%]">
+                  <button
+                    type="button"
+                    onClick={() => handleSort('default_country_of_origin')}
+                    className="inline-flex items-center gap-1.5 font-semibold uppercase tracking-wider text-slate-600 transition hover:text-slate-900"
+                  >
+                    <span>Origin</span>
+                    {renderSortIcon('default_country_of_origin')}
+                  </button>
+                </th>
+                <th className="py-3 px-4 w-[8%]">
+                  <button
+                    type="button"
+                    onClick={() => handleSort('default_net_qty')}
+                    className="inline-flex items-center gap-1.5 font-semibold uppercase tracking-wider text-slate-600 transition hover:text-slate-900"
+                  >
+                    <span>Net Qty</span>
+                    {renderSortIcon('default_net_qty')}
+                  </button>
+                </th>
+                <th className="py-3 px-4 w-[8%] text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {isLoading ? (
                 <tr>
-                  <td colSpan={6} className="py-12 text-center text-slate-400">
+                  <td colSpan={7} className="py-12 text-center text-slate-400">
                     <div className="flex items-center justify-center gap-2">
                       <span className="w-5 h-5 border-2 border-blue-600/30 border-t-blue-600 rounded-full animate-spin" />
                       <span>Loading categories...</span>
@@ -178,7 +296,7 @@ export const Categories: React.FC = () => {
                 </tr>
               ) : categories.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="py-12 text-center text-slate-400">
+                  <td colSpan={7} className="py-12 text-center text-slate-400">
                     <div className="max-w-xs mx-auto space-y-2">
                       <Layers className="w-8 h-8 text-slate-300 mx-auto" />
                       <p className="font-semibold text-slate-700 text-sm">No Categories Found</p>
@@ -195,47 +313,117 @@ export const Categories: React.FC = () => {
               ) : (
                 categories.map((cat) => (
                   <tr key={cat.id} className="hover:bg-slate-50/80 transition">
-                    <td className="py-3.5 px-5">
-                      <div className="font-bold text-slate-900 text-sm">{cat.name}</div>
-                      {cat.description && (
-                        <p className="text-[11px] text-slate-500 truncate max-w-xs">{cat.description}</p>
-                      )}
+                    <td className="py-4 px-5 align-middle">
+                      <div className="min-w-0">
+                        <div className="font-bold text-slate-950 text-sm leading-5 truncate">{cat.name}</div>
+                        <div className="mt-0.5 text-[11px] leading-4 text-slate-500 truncate">
+                          {cat.description || 'No category metadata added'}
+                        </div>
+                      </div>
                     </td>
-                    <td className="py-3.5 px-5 font-medium text-slate-700">
-                      {cat.default_generic_name || '-'}
+                    <td className="py-4 px-3 text-center align-middle">
+                      <span className="inline-flex h-6 min-w-9 items-center justify-center rounded-full bg-slate-100 px-2 text-[11px] font-bold text-slate-700 ring-1 ring-slate-200">
+                        {productCounts[cat.id] ?? productCounts[cat.name.toLowerCase()] ?? cat.product_count ?? 0}
+                      </span>
                     </td>
-                    <td className="py-3.5 px-5">
-                      <span className="px-2 py-0.5 rounded bg-blue-50 text-blue-700 font-semibold text-[11px]">
+                    <td className="py-4 px-4 align-middle font-medium text-slate-700">
+                      <span className="block truncate">{cat.default_generic_name || '-'}</span>
+                    </td>
+                    <td className="py-4 px-4 align-middle">
+                      <span className="inline-flex h-6 items-center rounded-md bg-blue-50 px-2 text-[11px] font-semibold text-blue-700">
                         {cat.default_warranty || '5 Years'}
                       </span>
                     </td>
-                    <td className="py-3.5 px-5 text-slate-600">
-                      {cat.default_country_of_origin || 'India'}
+                    <td className="py-4 px-4 align-middle text-slate-600">
+                      <span className="block truncate">{cat.default_country_of_origin || 'India'}</span>
                     </td>
-                    <td className="py-3.5 px-5 text-slate-600 font-medium">
-                      {cat.default_net_qty || '1 N'}
+                    <td className="py-4 px-4 align-middle text-slate-600 font-medium">
+                      <span className="block truncate">{cat.default_net_qty || '1 N'}</span>
                     </td>
-                    <td className="py-3.5 px-5 text-right space-x-1">
-                      <button
-                        onClick={() => openEditModal(cat)}
-                        className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition cursor-pointer"
-                        title="Edit Category"
-                      >
-                        <Edit2 className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => setDeleteTarget(cat)}
-                        className="p-1.5 text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer"
-                        title="Delete Category"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                    <td className="py-4 px-4 align-middle">
+                      <div className="flex items-center justify-end gap-1 whitespace-nowrap">
+                        <button
+                          onClick={() => openEditModal(cat)}
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 transition hover:bg-blue-50 hover:text-blue-600 cursor-pointer"
+                          title="Edit Category"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => setDeleteTarget(cat)}
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 transition hover:bg-rose-50 hover:text-rose-600 cursor-pointer"
+                          title="Delete Category"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
               )}
             </tbody>
           </table>
+        </div>
+        <div className="flex flex-col gap-3 border-t border-slate-200/80 bg-white px-5 py-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-3 text-xs text-slate-500">
+            <span>
+              Showing <span className="font-semibold text-slate-700">{rangeStart}</span>-
+              <span className="font-semibold text-slate-700">{rangeEnd}</span> of{' '}
+              <span className="font-semibold text-slate-700">{totalItems}</span>
+            </span>
+            <label className="flex items-center gap-2">
+              <span>Rows</span>
+              <select
+                value={pageSize}
+                onChange={(event) => setPageSize(Number(event.target.value))}
+                className="h-8 rounded-lg border border-slate-200 bg-slate-50 px-2 text-xs font-semibold text-slate-700 outline-hidden transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/20"
+              >
+                {[5, 10, 25, 50].map((size) => (
+                  <option key={size} value={size}>
+                    {size}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+
+          <div className="flex items-center justify-end gap-1">
+            <button
+              type="button"
+              onClick={() => setPage((current) => Math.max(1, current - 1))}
+              disabled={page <= 1 || isLoading}
+              className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-slate-500 transition hover:bg-slate-50 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-40"
+              title="Previous page"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+
+            {pageRange().map((pageNumber) => (
+              <button
+                key={pageNumber}
+                type="button"
+                onClick={() => setPage(pageNumber)}
+                disabled={isLoading}
+                className={`inline-flex h-8 min-w-8 items-center justify-center rounded-lg px-2 text-xs font-bold transition ${
+                  pageNumber === page
+                    ? 'bg-blue-600 text-white shadow-sm shadow-blue-500/20'
+                    : 'border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                } disabled:cursor-not-allowed disabled:opacity-50`}
+              >
+                {pageNumber}
+              </button>
+            ))}
+
+            <button
+              type="button"
+              onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
+              disabled={page >= totalPages || isLoading}
+              className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-slate-500 transition hover:bg-slate-50 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-40"
+              title="Next page"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       </div>
 

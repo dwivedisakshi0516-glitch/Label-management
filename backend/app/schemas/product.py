@@ -9,6 +9,11 @@ class ProductBase(BaseModel):
     product_number: Optional[str] = ""
     manufacturer_id: str = Field(..., min_length=1)
     manufacturer_name: Optional[str] = ""
+    manufacturer_address: Optional[str] = ""
+    importer_name: Optional[str] = ""
+    imported_in: Optional[str] = ""
+    customer_care_other_numbers: Optional[str] = ""
+    recycling_information: Optional[str] = ""
     customer_care_id: Optional[str] = ""
     customer_care_name: Optional[str] = ""
     warranty_id: Optional[str] = ""
@@ -32,6 +37,11 @@ class ProductUpdate(BaseModel):
     product_number: Optional[str] = None
     manufacturer_id: Optional[str] = None
     manufacturer_name: Optional[str] = None
+    manufacturer_address: Optional[str] = None
+    importer_name: Optional[str] = None
+    imported_in: Optional[str] = None
+    customer_care_other_numbers: Optional[str] = None
+    recycling_information: Optional[str] = None
     customer_care_id: Optional[str] = None
     customer_care_name: Optional[str] = None
     warranty_id: Optional[str] = None

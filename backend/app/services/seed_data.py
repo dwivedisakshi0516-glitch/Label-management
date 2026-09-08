@@ -328,6 +328,11 @@ async def seed_initial_data():
             "brand": "Brother",
             "product_number": "DCP-L5660DN",
             "mfg_name": "Brother Industries (Vietnam) Ltd.",
+            "manufacturer_address": "Phuc Dien Industrial Zone, Mao Dien Commune, Hai Phong City, Viet Nam - 174700",
+            "importer_name": "BROTHER INTERNATIONAL (INDIA) PVT LTD, NOS. 801 AND 802, 8TH FLOOR, ALPHA BUILDING, HIRANANDANI GARDENS, POWAI, MUMBAI - 400 076, MAHARASHTRA",
+            "imported_in": "January 2026",
+            "customer_care_other_numbers": "1800 209 8904 (OTHER LANDLINE AND MOBILE CUSTOMERS)",
+            "recycling_information": "For Recycling of your product, please visit: www.brother.in",
             "cc_name": "Brother India Support Helpdesk",
             "warranty_name": "5 Years",
             "country_of_origin": "Vietnam",
@@ -342,32 +347,42 @@ async def seed_initial_data():
             "name": "Brother HL-L5210DN",
             "category_name": "Printer",
             "brand": "Brother",
-            "product_number": "BR-HLL5210DN",
+            "product_number": "HL-L5210DN",
             "mfg_name": "Brother Industries (Vietnam) Ltd.",
+            "manufacturer_address": "Phuc Dien Industrial Zone, Cam Phuc Commune, Cam Giang District Hai Duong Province, Vietnam - 174700",
+            "importer_name": "BROTHER INTERNATIONAL (INDIA) PVT LTD, UNIT NOS. 801 AND 802, 8TH FLOOR, ALPHA BUILDING, HIRANANDANI GARDENS, POWAI, MUMBAI - 400 076, MAHARASHTRA",
+            "imported_in": "January 2025",
+            "customer_care_other_numbers": "1800 209 8904 (OTHER LANDLINE AND MOBILE CUSTOMERS)",
+            "recycling_information": "For Recycling of your product, please visit: www.brother.in",
             "cc_name": "Brother India Support Helpdesk",
             "warranty_name": "5 Years",
             "country_of_origin": "Vietnam",
-            "generic_name": "MONO SINGLE FUNCTION PRINTER",
-            "net_quantity": "1 N",
-            "default_mrp": 29500.0,
-            "tax_text": "Incl. of all Taxes",
-            "pack_contents": "Single Function Laser Printer 1 N, Toner Cartridge 1 N, Drum Unit 1 N, Power Cord 1 N",
+            "generic_name": "LASER PRINTER",
+            "net_quantity": "1N",
+            "default_mrp": 30990.0,
+            "tax_text": "Inclusive of all Taxes",
+            "pack_contents": "1N Printer, 1N Power Cable, 4N Assemblies of Drum and Toner Cartridge, 1N Setup CD, 1N Guide",
             "status": "Active"
         },
         {
             "name": "Brother DCP-L3560CDW",
             "category_name": "Printer",
             "brand": "Brother",
-            "product_number": "BR-DCPL3560CDW",
+            "product_number": "DCP-L3560CDW",
             "mfg_name": "Brother Industries (Vietnam) Ltd.",
+            "manufacturer_address": "Phuc Dien Industrial Zone, Mao Dien Commune, Hai Phong City, Viet Nam - 174700",
+            "importer_name": "BROTHER INTERNATIONAL (INDIA) PVT LTD, UNIT NOS. 801 AND 802, 8TH FLOOR, ALPHA BUILDING, HIRANANDANI GARDENS, POWAI, MUMBAI - 400 076, MAHARASHTRA",
+            "imported_in": "July 2026",
+            "customer_care_other_numbers": "1800 209 8904 (OTHER LANDLINE AND MOBILE CUSTOMERS)",
+            "recycling_information": "For Recycling of your product, please visit: www.brother.in",
             "cc_name": "Brother India Support Helpdesk",
             "warranty_name": "5 Years",
             "country_of_origin": "Vietnam",
-            "generic_name": "COLOUR MULTI-FUNCTION LASERJET",
-            "net_quantity": "1 N",
-            "default_mrp": 54900.0,
-            "tax_text": "Incl. of all Taxes",
-            "pack_contents": "Colour Laser Multi-Function Printer 1 N, 4 Starter Toner Cartridges 1 N, Drum Unit 1 N, Power Cord 1 N",
+            "generic_name": "LED MFC PRINTER",
+            "net_quantity": "1N",
+            "default_mrp": 57990.0,
+            "tax_text": "Inclusive of all Taxes",
+            "pack_contents": "1N Printer, 1N Power Cable, 4N Assemblies of Drum and Toner Cartridge, 1N Guide",
             "status": "Active"
         },
         {
@@ -406,12 +421,11 @@ async def seed_initial_data():
 
     for p in products_data:
         found = await products_coll.find_one({"name": p["name"]})
+        cat_id = cat_map.get(p["category_name"], "")
+        mfg_id = mfg_map.get(p["mfg_name"], "")
+        cc_id = cc_map.get(p["cc_name"], "")
+        w_id = warranty_map.get(p["warranty_name"], "")
         if not found:
-            cat_id = cat_map.get(p["category_name"], "")
-            mfg_id = mfg_map.get(p["mfg_name"], "")
-            cc_id = cc_map.get(p["cc_name"], "")
-            w_id = warranty_map.get(p["warranty_name"], "")
-
             p_doc = {
                 "id": str(uuid.uuid4()),
                 "name": p["name"],
@@ -421,6 +435,11 @@ async def seed_initial_data():
                 "product_number": p["product_number"],
                 "manufacturer_id": mfg_id,
                 "manufacturer_name": p["mfg_name"],
+                "manufacturer_address": p.get("manufacturer_address", ""),
+                "importer_name": p.get("importer_name", ""),
+                "imported_in": p.get("imported_in", ""),
+                "customer_care_other_numbers": p.get("customer_care_other_numbers", ""),
+                "recycling_information": p.get("recycling_information", ""),
                 "customer_care_id": cc_id,
                 "customer_care_name": p["cc_name"],
                 "warranty_id": w_id,
@@ -436,6 +455,35 @@ async def seed_initial_data():
                 "updated_at": datetime.datetime.utcnow().isoformat()
             }
             await products_coll.insert_one(p_doc)
+        else:
+            await products_coll.update_one(
+                {"_id": found["_id"]},
+                {"$set": {
+                    "category_id": cat_id,
+                    "category_name": p["category_name"],
+                    "brand": p["brand"],
+                    "product_number": p["product_number"],
+                    "manufacturer_id": mfg_id,
+                    "manufacturer_name": p["mfg_name"],
+                    "manufacturer_address": p.get("manufacturer_address", ""),
+                    "importer_name": p.get("importer_name", ""),
+                    "imported_in": p.get("imported_in", ""),
+                    "customer_care_other_numbers": p.get("customer_care_other_numbers", ""),
+                    "recycling_information": p.get("recycling_information", ""),
+                    "customer_care_id": cc_id,
+                    "customer_care_name": p["cc_name"],
+                    "warranty_id": w_id,
+                    "warranty_name": p["warranty_name"],
+                    "country_of_origin": p["country_of_origin"],
+                    "generic_name": p["generic_name"],
+                    "net_quantity": p["net_quantity"],
+                    "default_mrp": p["default_mrp"],
+                    "tax_text": p["tax_text"],
+                    "pack_contents": p["pack_contents"],
+                    "status": p["status"],
+                    "updated_at": datetime.datetime.utcnow().isoformat()
+                }}
+            )
 
     # 8. Seed Default Template
     fields = [
@@ -492,8 +540,7 @@ async def seed_initial_data():
             {"key": "importer_name", "label": "Importers Name & Address", "enabled": True, "font_size": 9, "bold": True, "alignment": "left", "order": 14, "default_value": ""},
             {"key": "imported_in", "label": "Imported In", "enabled": True, "font_size": 9, "bold": False, "alignment": "left", "order": 15, "default_value": ""},
             {"key": "customer_care_other_numbers", "label": "Customer Care - Other Numbers", "enabled": True, "font_size": 9, "bold": False, "alignment": "left", "order": 16, "default_value": ""},
-            {"key": "barcode_text", "label": "Barcode", "enabled": True, "font_size": 10, "bold": True, "alignment": "left", "order": 17, "default_value": ""},
-            {"key": "recycling_information", "label": "Recycling Information", "enabled": True, "font_size": 8, "bold": False, "alignment": "left", "order": 18, "default_value": ""}
+            {"key": "recycling_information", "label": "Recycling Information", "enabled": True, "font_size": 8, "bold": False, "alignment": "left", "order": 17, "default_value": ""}
         ]
         await templates_coll.insert_one({
             "id": str(uuid.uuid4()),
@@ -509,6 +556,20 @@ async def seed_initial_data():
             "updated_at": datetime.datetime.utcnow().isoformat()
         })
         printer_template = await templates_coll.find_one({"name": "Printer Compliance Label (100x95mm)"})
+    if printer_template:
+        cleaned_fields = [
+            field for field in printer_template.get("fields", [])
+            if field.get("key") != "barcode_text" and "barcode" not in str(field.get("label", "")).lower()
+        ]
+        if len(cleaned_fields) != len(printer_template.get("fields", [])):
+            await templates_coll.update_one(
+                {"id": printer_template["id"]},
+                {"$set": {
+                    "fields": cleaned_fields,
+                    "updated_at": datetime.datetime.utcnow().isoformat()
+                }}
+            )
+            printer_template = await templates_coll.find_one({"name": "Printer Compliance Label (100x95mm)"})
 
     aio_template = await templates_coll.find_one({"name": "AIO Computer Tall Label (65x150mm)"})
     if not aio_template:
@@ -540,6 +601,13 @@ async def seed_initial_data():
         "month": "January",
         "year": "2026"
     })
+    await db_manager.get_collection("labels").update_many(
+        {"category_name": "Printer"},
+        {
+            "$unset": {"snapshot.barcode_text": ""},
+            "$pull": {"snapshot.fields": {"key": "barcode_text"}}
+        }
+    )
     if existing_brother_label:
         await db_manager.get_collection("labels").update_one(
             {"id": existing_brother_label["id"]},
@@ -561,8 +629,7 @@ async def seed_initial_data():
             {"key": "imported_in", "label": "Imported In", "enabled": True, "font_size": 9, "bold": False, "alignment": "left", "order": 15, "default_value": ""},
             {"key": "customer_care_other_numbers", "label": "Customer Care - Other Numbers", "enabled": True, "font_size": 9, "bold": False, "alignment": "left", "order": 16, "default_value": ""},
             {"key": "website", "label": "Website", "enabled": True, "font_size": 9, "bold": False, "alignment": "left", "order": 17, "default_value": ""},
-            {"key": "barcode_text", "label": "Barcode", "enabled": True, "font_size": 10, "bold": True, "alignment": "left", "order": 18, "default_value": ""},
-            {"key": "recycling_information", "label": "Recycling Information", "enabled": True, "font_size": 8, "bold": False, "alignment": "left", "order": 19, "default_value": ""}
+            {"key": "recycling_information", "label": "Recycling Information", "enabled": True, "font_size": 8, "bold": False, "alignment": "left", "order": 18, "default_value": ""}
         ]
         label_fields = template_fields + [
             field for field in extra_printer_fields
@@ -609,7 +676,6 @@ async def seed_initial_data():
                 "imported_in": "January 2026",
                 "customer_care_other_numbers": "1800 209 8904 (OTHER LANDLINE AND MOBILE CUSTOMERS)",
                 "website": "WWW.BROTHER.IN",
-                "barcode_text": "8C5L5L00145",
                 "recycling_information": "For Recycling of your product, please visit: www.brother.in"
             },
             "created_by": "Admin",

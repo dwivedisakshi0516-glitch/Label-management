@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ProductModel, PrintJob, Category } from '../../types';
 import { INITIAL_CATEGORIES, INITIAL_MODELS } from '../../data/mockData';
 import { useAuth } from '../../context/AuthContext';
+import { labelsApi } from '../../services/api';
 import {
   Tag,
   Printer,
@@ -92,24 +93,61 @@ export const CreateLabelView: React.FC<CreateLabelViewProps> = ({ onJobCreated, 
     setTimeout(() => setNotification(null), 3500);
   };
 
+  const numericMrp = () => {
+    const parsed = Number(String(mrpValue).replace(/[^0-9.]/g, ''));
+    return Number.isFinite(parsed) ? parsed : 0;
+  };
+
+  const saveLabelSnapshotToDb = async (status: 'DRAFT' | 'QUEUED' | 'PRINTED') => {
+    await labelsApi.create({
+      category_id: selectedCategoryCode,
+      category_name: activeModel.categoryName,
+      product_id: activeModel.id,
+      product_name: activeModel.name,
+      template_id: activeModel.defaultTemplate || '',
+      month: mfgMonth,
+      year: mfgYear,
+      mrp: numericMrp(),
+      copies: batchCopies,
+      snapshot: {
+        productName: activeModel.name,
+        brand: activeModel.brand,
+        productNumber: activeModel.sku || activeModel.productNo,
+        manufacturerName: activeModel.manufacturedBy,
+        manufacturerAddress: activeModel.manufacturedByAddress,
+        customerCareProfile: 'Customer Care',
+        customerCareAddress: activeModel.complaintAddress,
+        customerCareEmail: activeModel.email,
+        customerCarePhone: activeModel.tollFree,
+        customerCareWhatsApp: activeModel.whatsapp,
+        customerCareWebsite: activeModel.website,
+        warranty: activeModel.warranty,
+        countryOfOrigin: activeModel.countryOfOrigin,
+        genericName: activeModel.genericName,
+        netQuantity: netQty,
+        mrp: numericMrp(),
+        taxText: isTaxInclusive ? 'Incl. of all Taxes' : '',
+        packContents: activeModel.packContents,
+        month: mfgMonth,
+        year: mfgYear,
+        manualSerial,
+        status,
+      },
+    });
+  };
+
   // 1. Save Draft
-  const handleSaveDraft = () => {
-    const draft = {
-      modelId: activeModel.id,
-      categoryCode: selectedCategoryCode,
-      mfgMonth,
-      mfgYear,
-      mrpValue,
-      netQty,
-      manualSerial,
-      savedAt: new Date().toISOString()
-    };
-    localStorage.setItem('operator_label_draft', JSON.stringify(draft));
-    showToast('Draft saved successfully in local storage.');
+  const handleSaveDraft = async () => {
+    try {
+      await saveLabelSnapshotToDb('DRAFT');
+      showToast('Draft saved successfully to database.');
+    } catch (error) {
+      showToast('Could not save draft to database. Please check backend connection.');
+    }
   };
 
   // 2. Save Label
-  const handleSaveLabel = () => {
+  const handleSaveLabel = async () => {
     const newJob: PrintJob = {
       id: `#LBL-${Math.floor(10000 + Math.random() * 90000)}`,
       productModel: activeModel.name,
@@ -129,11 +167,16 @@ export const CreateLabelView: React.FC<CreateLabelViewProps> = ({ onJobCreated, 
     if (onJobCreated) {
       onJobCreated(newJob);
     }
-    showToast(`Label for "${activeModel.name}" saved to Print Spooler!`);
+    try {
+      await saveLabelSnapshotToDb('QUEUED');
+      showToast(`Label for "${activeModel.name}" saved to database!`);
+    } catch (error) {
+      showToast('Could not save label to database. Please check backend connection.');
+    }
   };
 
   // 3. Direct Print
-  const handleDirectPrint = () => {
+  const handleDirectPrint = async () => {
     // Record job
     const newJob: PrintJob = {
       id: `#LBL-${Math.floor(10000 + Math.random() * 90000)}`,
@@ -153,6 +196,12 @@ export const CreateLabelView: React.FC<CreateLabelViewProps> = ({ onJobCreated, 
 
     if (onJobCreated) {
       onJobCreated(newJob);
+    }
+
+    try {
+      await saveLabelSnapshotToDb('PRINTED');
+    } catch (error) {
+      showToast('Print opened, but database save failed. Please check backend connection.');
     }
 
     // Trigger native browser print
@@ -715,7 +764,7 @@ export const CreateLabelView: React.FC<CreateLabelViewProps> = ({ onJobCreated, 
                   type="button"
                   onClick={handleSaveDraft}
                   className="py-2.5 px-3 bg-[#171f32] hover:bg-[#222a3d] text-white font-mono text-xs rounded-lg flex items-center justify-center gap-1.5 border border-[#424754]/50 cursor-pointer transition-colors"
-                  title="Save current operator entries as draft locally"
+                  title="Save current operator entries as a draft in the database"
                 >
                   <Save className="w-3.5 h-3.5 text-[#4cd7f6]" />
                   <span>Save Draft</span>

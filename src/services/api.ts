@@ -67,10 +67,61 @@ export const authApi = {
 };
 
 // Categories Services
+export interface PaginatedCategoriesResponse {
+  items: Category[];
+  total: number;
+  page: number;
+  page_size: number;
+  total_pages: number;
+  sort_by: string;
+  sort_order: 'asc' | 'desc';
+}
+
 export const categoriesApi = {
   getAll: async (search?: string): Promise<Category[]> => {
     const res = await api.get('/categories', { params: { search } });
     return res.data;
+  },
+  getPage: async (params: {
+    search?: string;
+    page: number;
+    page_size: number;
+    sort_by: string;
+    sort_order: 'asc' | 'desc';
+  }): Promise<PaginatedCategoriesResponse> => {
+    const res = await api.get('/categories', { params });
+    const data = res.data;
+    if (Array.isArray(data)) {
+      return {
+        items: data,
+        total: data.length,
+        page: 1,
+        page_size: data.length || params.page_size,
+        total_pages: 1,
+        sort_by: params.sort_by,
+        sort_order: params.sort_order,
+      };
+    }
+    if (Array.isArray(data?.value)) {
+      return {
+        items: data.value,
+        total: Number(data.Count ?? data.value.length),
+        page: 1,
+        page_size: data.value.length || params.page_size,
+        total_pages: 1,
+        sort_by: params.sort_by,
+        sort_order: params.sort_order,
+      };
+    }
+    return {
+      items: Array.isArray(data?.items) ? data.items : [],
+      total: Number(data?.total ?? 0),
+      page: Number(data?.page ?? params.page),
+      page_size: Number(data?.page_size ?? params.page_size),
+      total_pages: Number(data?.total_pages ?? 1),
+      sort_by: data?.sort_by || params.sort_by,
+      sort_order: data?.sort_order === 'desc' ? 'desc' : 'asc',
+    };
   },
   create: async (data: Partial<Category>): Promise<Category> => {
     const res = await api.post('/categories', data);
