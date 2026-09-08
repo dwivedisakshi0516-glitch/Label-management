@@ -54,12 +54,63 @@ const FONT_FAMILY_OPTIONS = [
   { label: 'Default Category Font', value: '', defaultWeight: '' },
   { label: 'Sans-serif', value: '-apple-system, BlinkMacSystemFont, "Segoe UI", Arial, Helvetica, sans-serif', defaultWeight: '' },
   { label: 'Arial', value: 'Arial, Helvetica, sans-serif', defaultWeight: '' },
+  { label: 'Arial Bold', value: 'Arial, Helvetica, sans-serif', defaultWeight: '700' },
   { label: 'Arial Narrow', value: '"Arial Narrow", Arial, sans-serif', defaultWeight: '600' },
+  { label: 'Aardvark Cafe', value: '"Aardvark Cafe", "Comic Sans MS", cursive', defaultWeight: '700' },
+  { label: 'Babylon5', value: '"Babylon5", "Arial Black", Arial, sans-serif', defaultWeight: '700' },
+  { label: 'Baskerville Black SSI', value: '"Baskerville Black SSI", Baskerville, Georgia, serif', defaultWeight: '900' },
+  { label: 'Bauhaus Md BT', value: '"Bauhaus Md BT", "Bauhaus 93", Arial, sans-serif', defaultWeight: '600' },
+  { label: 'Bellamy Bold', value: '"Bellamy Bold", "Arial Black", Arial, sans-serif', defaultWeight: '700' },
+  { label: 'Belwe Cn BT', value: '"Belwe Cn BT", "Belwe Condensed", Georgia, serif', defaultWeight: '600' },
+  { label: 'Black Chancery', value: '"Black Chancery", "Lucida Calligraphy", cursive', defaultWeight: '' },
+  { label: 'Calligrapher', value: 'Calligrapher, "Lucida Calligraphy", cursive', defaultWeight: '' },
+  { label: 'Casablanca', value: 'Casablanca, Georgia, serif', defaultWeight: '700' },
+  { label: 'Cooper', value: 'Cooper, "Cooper Black", Georgia, serif', defaultWeight: '700' },
+  { label: 'Copperplate Gothic Bold', value: '"Copperplate Gothic Bold", Copperplate, fantasy', defaultWeight: '700' },
+  { label: 'Derringer DB', value: '"Derringer DB", "Rockwell Condensed", serif', defaultWeight: '700' },
+  { label: 'Diamante LH', value: '"Diamante LH", "Arial Black", Arial, sans-serif', defaultWeight: '700' },
+  { label: 'DomBold BT', value: '"DomBold BT", "Arial Black", Arial, sans-serif', defaultWeight: '700' },
+  { label: 'Egyptian505 BT', value: '"Egyptian505 BT", Rockwell, serif', defaultWeight: '700' },
+  { label: 'Euromode', value: 'Euromode, Eurostile, Arial, sans-serif', defaultWeight: '600' },
+  { label: 'Georgia', value: 'Georgia, "Times New Roman", serif', defaultWeight: '' },
+  { label: 'Greyhound Bold', value: '"Greyhound Bold", "Arial Black", Arial, sans-serif', defaultWeight: '700' },
+  { label: 'Harlow Solid Italic', value: '"Harlow Solid Italic", "Lucida Calligraphy", cursive', defaultWeight: '' },
+  { label: 'Impact', value: 'Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif', defaultWeight: '700' },
+  { label: 'Kaleidoskop', value: 'Kaleidoskop, Impact, fantasy', defaultWeight: '700' },
+  { label: 'Korinna BT', value: '"Korinna BT", Georgia, serif', defaultWeight: '' },
+  { label: 'Latin725 Md BT', value: '"Latin725 Md BT", "Times New Roman", serif', defaultWeight: '500' },
+  { label: 'Magik', value: 'Magik, "Lucida Calligraphy", cursive', defaultWeight: '' },
+  { label: 'Limerick Serial DB', value: '"Limerick Serial DB", "Arial Black", Arial, sans-serif', defaultWeight: '700' },
+  { label: 'MarlboroWide', value: 'MarlboroWide, "Arial Black", Arial, sans-serif', defaultWeight: '700' },
+  { label: 'MotoyaG04Gothic', value: 'MotoyaG04Gothic, "Arial Black", Arial, sans-serif', defaultWeight: '700' },
+  { label: 'Melbourne Serial DB', value: '"Melbourne Serial DB", Georgia, serif', defaultWeight: '' },
+  { label: 'Mento', value: 'Mento, "Times New Roman", serif', defaultWeight: '' },
+  { label: 'Mesouran Serif Black SSI', value: '"Mesouran Serif Black SSI", Georgia, serif', defaultWeight: '900' },
+  { label: 'Poor Richard', value: '"Poor Richard", Georgia, serif', defaultWeight: '' },
+  { label: 'Ragtime Medium', value: '"Ragtime Medium", "Arial Black", Arial, sans-serif', defaultWeight: '500' },
+  { label: 'RaleighH', value: 'RaleighH, Georgia, serif', defaultWeight: '700' },
+  { label: 'Rockwell Condensed', value: '"Rockwell Condensed", Rockwell, serif', defaultWeight: '600' },
+  { label: 'Romana BT', value: '"Romana BT", Georgia, serif', defaultWeight: '' },
+  { label: 'Seagull Hv BT', value: '"Seagull Hv BT", Arial, sans-serif', defaultWeight: '800' },
+  { label: 'Signboard', value: 'Signboard, Impact, fantasy', defaultWeight: '700' },
+  { label: 'Sigvar', value: 'Sigvar, Georgia, serif', defaultWeight: '' },
+  { label: 'StaffordLH Bold', value: '"StaffordLH Bold", "Arial Black", Arial, sans-serif', defaultWeight: '700' },
+  { label: 'Swiss 721 BlkCn BT', value: '"Swiss 721 BlkCn BT", "Arial Narrow", Arial, sans-serif', defaultWeight: '900' },
+  { label: 'Taipei', value: 'Taipei, "Comic Sans MS", cursive', defaultWeight: '' },
+  { label: 'Tiffany Hv BT', value: '"Tiffany Hv BT", Georgia, serif', defaultWeight: '800' },
+  { label: 'UniversityRoman BT', value: '"UniversityRoman BT", Georgia, serif', defaultWeight: '' },
+  { label: 'VagRounded BT', value: '"VagRounded BT", "Arial Rounded MT Bold", Arial, sans-serif', defaultWeight: '700' },
+  { label: 'Vahika', value: 'Vahika, "Arial Black", Arial, sans-serif', defaultWeight: '700' },
+  { label: 'VercacruzLH', value: 'VercacruzLH, Georgia, serif', defaultWeight: '' },
+  { label: 'Verona', value: 'Verona, Georgia, serif', defaultWeight: '700' },
+  { label: 'Windsor Condensed', value: '"Windsor Condensed", "Arial Narrow", Georgia, serif', defaultWeight: '600' },
+  { label: 'Worcester', value: 'Worcester, Georgia, serif', defaultWeight: '700' },
+  { label: 'ZapfChan Bd BT', value: '"ZapfChan Bd BT", "Zapf Chancery", "Lucida Calligraphy", cursive', defaultWeight: '700' },
+  { label: 'Bebas Neue', value: '"Bebas Neue", "DIN Condensed", "Arial Narrow", sans-serif', defaultWeight: '700' },
   { label: 'Roboto Condensed', value: '"Roboto Condensed", "Arial Narrow", Arial, sans-serif', defaultWeight: '600' },
   { label: 'Helvetica Condensed', value: '"Helvetica Neue Condensed", "Helvetica Condensed", "Arial Narrow", Helvetica, Arial, sans-serif', defaultWeight: '600' },
   { label: 'Liberation Sans Narrow', value: '"Liberation Sans Narrow", "Arial Narrow", Arial, sans-serif', defaultWeight: '600' },
   { label: 'DIN Condensed', value: '"DIN Condensed", "Roboto Condensed", "Arial Narrow", sans-serif', defaultWeight: '600' },
-  { label: 'Bebas Neue', value: '"Bebas Neue", "DIN Condensed", "Arial Narrow", sans-serif', defaultWeight: '700' },
   { label: 'Inter', value: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', defaultWeight: '' },
   { label: 'Roboto', value: 'Roboto, Arial, sans-serif', defaultWeight: '' },
   { label: 'Times New Roman', value: '"Times New Roman", Times, serif', defaultWeight: '' },
@@ -173,6 +224,7 @@ export const EditLabel: React.FC<EditLabelProps> = ({
   const [customFieldValues, setCustomFieldValues] = useState<Record<string, string>>({});
   const [customSections, setCustomSections] = useState<Array<{ heading: string; content: string }>>([]);
   const [fontFamily, setFontFamily] = useState('');
+  const [isFontMenuOpen, setIsFontMenuOpen] = useState(false);
   const [fontWeight, setFontWeight] = useState('');
   const [fontSizePt, setFontSizePt] = useState<number | string>('');
   const [lineHeight, setLineHeight] = useState<number | string>('');
@@ -367,6 +419,7 @@ export const EditLabel: React.FC<EditLabelProps> = ({
 
   const handleFontFamilyChange = (value: string) => {
     setFontFamily(value);
+    setIsFontMenuOpen(false);
     const selectedFont = FONT_FAMILY_OPTIONS.find((option) => option.value === value);
     if (selectedFont?.defaultWeight !== undefined) {
       setFontWeight(selectedFont.defaultWeight);
@@ -665,11 +718,49 @@ export const EditLabel: React.FC<EditLabelProps> = ({
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block font-semibold text-slate-700 uppercase tracking-wider mb-1">Font Type / Family</label>
-                    <select value={fontFamily} onChange={(e) => handleFontFamilyChange(e.target.value)} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 font-semibold focus:outline-hidden focus:ring-2 focus:ring-blue-500">
-                      {FONT_FAMILY_OPTIONS.map((option) => (
-                        <option key={option.label} value={option.value}>{option.label}</option>
-                      ))}
-                    </select>
+                    <div
+                      className="relative"
+                      onBlur={(event) => {
+                        if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+                          setIsFontMenuOpen(false);
+                        }
+                      }}
+                    >
+                      <button
+                        type="button"
+                        onClick={() => setIsFontMenuOpen((open) => !open)}
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 font-semibold focus:outline-hidden focus:ring-2 focus:ring-blue-500 flex items-center justify-between gap-3 text-left"
+                        aria-haspopup="listbox"
+                        aria-expanded={isFontMenuOpen}
+                      >
+                        <span className="truncate">
+                          {FONT_FAMILY_OPTIONS.find((option) => option.value === fontFamily)?.label || 'Default Category Font'}
+                        </span>
+                        <span className="text-slate-400 text-xs">v</span>
+                      </button>
+                      {isFontMenuOpen && (
+                        <div
+                          className="absolute left-0 right-0 top-full z-50 mt-1 max-h-72 overflow-y-auto rounded-xl border border-slate-200 bg-white py-1 shadow-xl shadow-slate-900/10"
+                          role="listbox"
+                        >
+                          {FONT_FAMILY_OPTIONS.map((option) => (
+                            <button
+                              key={option.label}
+                              type="button"
+                              onClick={() => handleFontFamilyChange(option.value)}
+                              className={`w-full px-3 py-2 text-left text-sm transition hover:bg-blue-50 focus:bg-blue-50 focus:outline-hidden ${
+                                option.value === fontFamily ? 'bg-blue-50 text-blue-700 font-bold' : 'text-slate-800 font-semibold'
+                              }`}
+                              style={option.value ? { fontFamily: option.value } : undefined}
+                              role="option"
+                              aria-selected={option.value === fontFamily}
+                            >
+                              {option.label}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
                   <div>
                     <label className="block font-semibold text-slate-700 uppercase tracking-wider mb-1">Font Weight</label>
