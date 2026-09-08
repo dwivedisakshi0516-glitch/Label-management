@@ -10,6 +10,9 @@ class ProductBase(BaseModel):
     manufacturer_id: str = Field(..., min_length=1)
     manufacturer_name: Optional[str] = ""
     manufacturer_address: Optional[str] = ""
+    manufactured_for_name: Optional[str] = ""
+    manufactured_for_address: Optional[str] = ""
+    generic_note: Optional[str] = ""
     importer_name: Optional[str] = ""
     imported_in: Optional[str] = ""
     customer_care_other_numbers: Optional[str] = ""
@@ -38,6 +41,9 @@ class ProductUpdate(BaseModel):
     manufacturer_id: Optional[str] = None
     manufacturer_name: Optional[str] = None
     manufacturer_address: Optional[str] = None
+    manufactured_for_name: Optional[str] = None
+    manufactured_for_address: Optional[str] = None
+    generic_note: Optional[str] = None
     importer_name: Optional[str] = None
     imported_in: Optional[str] = None
     customer_care_other_numbers: Optional[str] = None

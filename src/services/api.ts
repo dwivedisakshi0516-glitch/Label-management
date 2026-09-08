@@ -91,27 +91,36 @@ export const categoriesApi = {
   }): Promise<PaginatedCategoriesResponse> => {
     const res = await api.get('/categories', { params });
     const data = res.data;
-    if (Array.isArray(data)) {
+    const paginateLegacyItems = (items: Category[]): PaginatedCategoriesResponse => {
+      const sortedItems = [...items].sort((a, b) => {
+        const aValue = String((a as any)[params.sort_by] ?? '').toLowerCase();
+        const bValue = String((b as any)[params.sort_by] ?? '').toLowerCase();
+        return params.sort_order === 'desc'
+          ? bValue.localeCompare(aValue, undefined, { numeric: true })
+          : aValue.localeCompare(bValue, undefined, { numeric: true });
+      });
+      const total = sortedItems.length;
+      const pageSize = Math.min(params.page_size || 50, 50);
+      const totalPages = Math.max(1, Math.ceil(total / pageSize));
+      const page = Math.min(Math.max(params.page || 1, 1), totalPages);
+      const startIndex = (page - 1) * pageSize;
+
       return {
-        items: data,
-        total: data.length,
-        page: 1,
-        page_size: data.length || params.page_size,
-        total_pages: 1,
+        items: sortedItems.slice(startIndex, startIndex + pageSize),
+        total,
+        page,
+        page_size: pageSize,
+        total_pages: totalPages,
         sort_by: params.sort_by,
         sort_order: params.sort_order,
       };
+    };
+
+    if (Array.isArray(data)) {
+      return paginateLegacyItems(data);
     }
     if (Array.isArray(data?.value)) {
-      return {
-        items: data.value,
-        total: Number(data.Count ?? data.value.length),
-        page: 1,
-        page_size: data.value.length || params.page_size,
-        total_pages: 1,
-        sort_by: params.sort_by,
-        sort_order: params.sort_order,
-      };
+      return paginateLegacyItems(data.value);
     }
     return {
       items: Array.isArray(data?.items) ? data.items : [],

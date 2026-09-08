@@ -136,6 +136,16 @@ const BORDER_STYLE_OPTIONS = [
   { label: 'No Border', value: 'none' },
 ];
 
+const SPACING_PRESETS = [
+  { label: 'Default Spacing', value: 'default', labelValueGapMm: '', sectionGapMm: '', paragraphGapMm: '' },
+  { label: 'Compact', value: 'compact', labelValueGapMm: 0.5, sectionGapMm: 0.5, paragraphGapMm: 1.5 },
+  { label: 'Standard', value: 'standard', labelValueGapMm: 1, sectionGapMm: 1, paragraphGapMm: 3 },
+  { label: 'Relaxed', value: 'relaxed', labelValueGapMm: 1.5, sectionGapMm: 1.5, paragraphGapMm: 4.5 },
+  { label: 'Wide Title-Value', value: 'wide-title-value', labelValueGapMm: 3, sectionGapMm: 1, paragraphGapMm: 3 },
+  { label: 'Two-Line Breaks', value: 'two-line-breaks', labelValueGapMm: 1, sectionGapMm: 1, paragraphGapMm: 7 },
+  { label: 'Custom', value: 'custom', labelValueGapMm: '', sectionGapMm: '', paragraphGapMm: '' },
+] as const;
+
 const BUILT_IN_TEMPLATE_KEYS = new Set([
   'manufactured_by',
   'manufactured_for',
@@ -235,6 +245,10 @@ export const EditLabel: React.FC<EditLabelProps> = ({
   const [borderStyle, setBorderStyle] = useState('solid');
   const [borderColor, setBorderColor] = useState('#000000');
   const [borderRadiusMm, setBorderRadiusMm] = useState<number | string>('');
+  const [spacingPreset, setSpacingPreset] = useState('default');
+  const [labelValueGapMm, setLabelValueGapMm] = useState<number | string>('');
+  const [sectionGapMm, setSectionGapMm] = useState<number | string>('');
+  const [paragraphGapMm, setParagraphGapMm] = useState<number | string>('');
   const [titleBold, setTitleBold] = useState(false);
   const [titleItalic, setTitleItalic] = useState(false);
   const [titleUnderline, setTitleUnderline] = useState(false);
@@ -309,6 +323,16 @@ export const EditLabel: React.FC<EditLabelProps> = ({
     setBorderStyle(s.labelStyle?.borderStyle || 'solid');
     setBorderColor(s.labelStyle?.borderColor || '#000000');
     setBorderRadiusMm(s.labelStyle?.borderRadiusMm ?? '');
+    setLabelValueGapMm(s.labelStyle?.labelValueGapMm ?? '');
+    setSectionGapMm(s.labelStyle?.sectionGapMm ?? '');
+    setParagraphGapMm(s.labelStyle?.paragraphGapMm ?? '');
+    setSpacingPreset(
+      SPACING_PRESETS.find((preset) =>
+        preset.labelValueGapMm === (s.labelStyle?.labelValueGapMm ?? '') &&
+        preset.sectionGapMm === (s.labelStyle?.sectionGapMm ?? '') &&
+        preset.paragraphGapMm === (s.labelStyle?.paragraphGapMm ?? '')
+      )?.value || 'custom'
+    );
     setTitleBold(Boolean(s.labelStyle?.titleBold));
     setTitleItalic(Boolean(s.labelStyle?.titleItalic));
     setTitleUnderline(Boolean(s.labelStyle?.titleUnderline));
@@ -389,6 +413,9 @@ export const EditLabel: React.FC<EditLabelProps> = ({
       ...(borderStyle ? { borderStyle } : {}),
       ...(borderColor ? { borderColor } : {}),
       ...(toOptionalNumber(borderRadiusMm) !== undefined ? { borderRadiusMm: toOptionalNumber(borderRadiusMm) } : {}),
+      ...(toOptionalNumber(labelValueGapMm) !== undefined ? { labelValueGapMm: toOptionalNumber(labelValueGapMm) } : {}),
+      ...(toOptionalNumber(sectionGapMm) !== undefined ? { sectionGapMm: toOptionalNumber(sectionGapMm) } : {}),
+      ...(toOptionalNumber(paragraphGapMm) !== undefined ? { paragraphGapMm: toOptionalNumber(paragraphGapMm) } : {}),
       titleBold,
       titleItalic,
       titleUnderline,
@@ -861,6 +888,89 @@ export const EditLabel: React.FC<EditLabelProps> = ({
                   </div>
                 </div>
 
+                <div className="rounded-xl border border-slate-200 bg-slate-50 p-3.5 space-y-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <div className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">Spacing</div>
+                    </div>
+                    <select
+                      value={spacingPreset}
+                      onChange={(e) => {
+                        const preset = SPACING_PRESETS.find((option) => option.value === e.target.value);
+                        setSpacingPreset(e.target.value);
+                        if (preset && preset.value !== 'custom') {
+                          setLabelValueGapMm(preset.labelValueGapMm);
+                          setSectionGapMm(preset.sectionGapMm);
+                          setParagraphGapMm(preset.paragraphGapMm);
+                        }
+                      }}
+                      className="w-44 px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+                    >
+                      {SPACING_PRESETS.map((option) => (
+                        <option key={option.value} value={option.value}>{option.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                      <label className="block font-semibold text-slate-600 text-[10px] uppercase mb-1">Title-Value Gap</label>
+                      <select
+                        value={String(labelValueGapMm)}
+                        onChange={(e) => {
+                          setSpacingPreset('custom');
+                          setLabelValueGapMm(e.target.value);
+                        }}
+                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="">Default</option>
+                        <option value="0">No Gap</option>
+                        <option value="0.5">Tight - 0.5 mm</option>
+                        <option value="1">Normal - 1 mm</option>
+                        <option value="1.5">Open - 1.5 mm</option>
+                        <option value="2">Wide - 2 mm</option>
+                        <option value="3">Extra Wide - 3 mm</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block font-semibold text-slate-600 text-[10px] uppercase mb-1">Field Gap</label>
+                      <select
+                        value={String(sectionGapMm)}
+                        onChange={(e) => {
+                          setSpacingPreset('custom');
+                          setSectionGapMm(e.target.value);
+                        }}
+                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="">Default</option>
+                        <option value="0">No Gap</option>
+                        <option value="0.5">Tight - 0.5 mm</option>
+                        <option value="1">Normal - 1 mm</option>
+                        <option value="1.5">Open - 1.5 mm</option>
+                        <option value="2">Wide - 2 mm</option>
+                        <option value="3">Extra Wide - 3 mm</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block font-semibold text-slate-600 text-[10px] uppercase mb-1">Section Break</label>
+                      <select
+                        value={String(paragraphGapMm)}
+                        onChange={(e) => {
+                          setSpacingPreset('custom');
+                          setParagraphGapMm(e.target.value);
+                        }}
+                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="">Default</option>
+                        <option value="1.5">Compact - 1.5 mm</option>
+                        <option value="3">One Line - 3 mm</option>
+                        <option value="5">Large - 5 mm</option>
+                        <option value="7">Two Lines - 7 mm</option>
+                        <option value="10">Extra Large - 10 mm</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-50 p-3.5 rounded-xl border border-slate-200">
                   <div>
                     <label className="block font-semibold text-slate-600 text-[10px] uppercase mb-1">Padding (mm)</label>
@@ -944,6 +1054,10 @@ export const EditLabel: React.FC<EditLabelProps> = ({
                     setBorderStyle('solid');
                     setBorderColor('#000000');
                     setBorderRadiusMm('');
+                    setSpacingPreset('default');
+                    setLabelValueGapMm('');
+                    setSectionGapMm('');
+                    setParagraphGapMm('');
                     setTitleBold(false);
                     setTitleItalic(false);
                     setTitleUnderline(false);
@@ -1165,11 +1279,13 @@ export const EditLabel: React.FC<EditLabelProps> = ({
               </button>
             </div>
 
-            <div className="p-4 overflow-auto flex-1 flex flex-col items-center justify-start bg-slate-100/80">
-              <div className="shadow-2xl rounded-xs origin-top scale-[0.78]">
-                <PrintableLabel snapshot={currentSnapshot} copies={1} isPrintMode={false} />
+            <div className="p-4 overflow-auto flex-1 flex flex-col items-center justify-start gap-4 bg-slate-100/80">
+              <div className="origin-top">
+                <div className="shadow-2xl rounded-xs origin-top scale-[0.78]">
+                  <PrintableLabel snapshot={currentSnapshot} copies={1} isPrintMode={false} />
+                </div>
               </div>
-              <p className="text-center text-[10px] text-slate-400 -mt-24">
+              <p className="text-center text-[10px] text-slate-400">
                 This exact layout will be dispatched to the physical label printer.
               </p>
             </div>

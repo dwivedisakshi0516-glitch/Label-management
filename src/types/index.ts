@@ -77,6 +77,9 @@ export interface Product {
   manufacturer_id: string;
   manufacturer_name?: string;
   manufacturer_address?: string;
+  manufactured_for_name?: string;
+  manufactured_for_address?: string;
+  generic_note?: string;
   importer_name?: string;
   imported_in?: string;
   customer_care_other_numbers?: string;
@@ -230,6 +233,9 @@ export interface LabelSnapshot {
     borderStyle?: 'solid' | 'dashed' | 'dotted' | 'double' | 'none' | string;
     borderColor?: string;
     borderRadiusMm?: number;
+    labelValueGapMm?: number;
+    sectionGapMm?: number;
+    paragraphGapMm?: number;
     titleBold?: boolean;
     titleItalic?: boolean;
     titleUnderline?: boolean;

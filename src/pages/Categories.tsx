@@ -91,18 +91,14 @@ export const Categories: React.FC = () => {
   };
 
   const renderSortIcon = (field: string) => {
-    if (sortBy !== field) return <ArrowUpDown className="w-3.5 h-3.5 text-slate-400" />;
+    if (sortBy !== field) {
+      return (
+        <ArrowUpDown className="w-3.5 h-3.5 text-slate-400 opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100" />
+      );
+    }
     return sortOrder === 'asc'
       ? <ArrowUp className="w-3.5 h-3.5 text-blue-600" />
       : <ArrowDown className="w-3.5 h-3.5 text-blue-600" />;
-  };
-
-  const pageRange = () => {
-    const visiblePages = 5;
-    const half = Math.floor(visiblePages / 2);
-    const start = Math.max(1, Math.min(page - half, totalPages - visiblePages + 1));
-    const end = Math.min(totalPages, start + visiblePages - 1);
-    return Array.from({ length: end - start + 1 }, (_, index) => start + index);
   };
 
   const rangeStart = totalItems === 0 ? 0 : (page - 1) * pageSize + 1;
@@ -225,7 +221,7 @@ export const Categories: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => handleSort('name')}
-                    className="inline-flex items-center gap-1.5 font-semibold uppercase tracking-wider text-slate-600 transition hover:text-slate-900"
+                    className="group inline-flex items-center gap-1.5 font-semibold uppercase tracking-wider text-slate-600 transition hover:text-slate-900"
                   >
                     <span>Category Name</span>
                     {renderSortIcon('name')}
@@ -235,7 +231,7 @@ export const Categories: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => handleSort('product_count')}
-                    className="inline-flex items-center justify-center gap-1.5 font-semibold uppercase tracking-wider text-slate-600 transition hover:text-slate-900"
+                    className="group inline-flex items-center justify-center gap-1.5 font-semibold uppercase tracking-wider text-slate-600 transition hover:text-slate-900"
                   >
                     <span>Products</span>
                     {renderSortIcon('product_count')}
@@ -245,7 +241,7 @@ export const Categories: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => handleSort('default_generic_name')}
-                    className="inline-flex items-center gap-1.5 font-semibold uppercase tracking-wider text-slate-600 transition hover:text-slate-900"
+                    className="group inline-flex items-center gap-1.5 font-semibold uppercase tracking-wider text-slate-600 transition hover:text-slate-900"
                   >
                     <span>Default Generic Name</span>
                     {renderSortIcon('default_generic_name')}
@@ -255,7 +251,7 @@ export const Categories: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => handleSort('default_warranty')}
-                    className="inline-flex items-center gap-1.5 font-semibold uppercase tracking-wider text-slate-600 transition hover:text-slate-900"
+                    className="group inline-flex items-center gap-1.5 font-semibold uppercase tracking-wider text-slate-600 transition hover:text-slate-900"
                   >
                     <span>Default Warranty</span>
                     {renderSortIcon('default_warranty')}
@@ -265,7 +261,7 @@ export const Categories: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => handleSort('default_country_of_origin')}
-                    className="inline-flex items-center gap-1.5 font-semibold uppercase tracking-wider text-slate-600 transition hover:text-slate-900"
+                    className="group inline-flex items-center gap-1.5 font-semibold uppercase tracking-wider text-slate-600 transition hover:text-slate-900"
                   >
                     <span>Origin</span>
                     {renderSortIcon('default_country_of_origin')}
@@ -275,7 +271,7 @@ export const Categories: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => handleSort('default_net_qty')}
-                    className="inline-flex items-center gap-1.5 font-semibold uppercase tracking-wider text-slate-600 transition hover:text-slate-900"
+                    className="group inline-flex items-center gap-1.5 font-semibold uppercase tracking-wider text-slate-600 transition hover:text-slate-900"
                   >
                     <span>Net Qty</span>
                     {renderSortIcon('default_net_qty')}
@@ -398,21 +394,9 @@ export const Categories: React.FC = () => {
               <ChevronLeft className="w-4 h-4" />
             </button>
 
-            {pageRange().map((pageNumber) => (
-              <button
-                key={pageNumber}
-                type="button"
-                onClick={() => setPage(pageNumber)}
-                disabled={isLoading}
-                className={`inline-flex h-8 min-w-8 items-center justify-center rounded-lg px-2 text-xs font-bold transition ${
-                  pageNumber === page
-                    ? 'bg-blue-600 text-white shadow-sm shadow-blue-500/20'
-                    : 'border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-                } disabled:cursor-not-allowed disabled:opacity-50`}
-              >
-                {pageNumber}
-              </button>
-            ))}
+            <span className="px-2 text-xs font-semibold text-slate-500">
+              Page {page} of {totalPages}
+            </span>
 
             <button
               type="button"

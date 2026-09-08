@@ -70,7 +70,7 @@ const PRINTER_TEMPLATE_FIELDS = [
 
 const AIO_TEMPLATE_FIELDS = [
   { key: 'manufactured_for_name', label: 'Manufactured For Name', enabled: true, font_size: 10, bold: true, alignment: 'left' as const, order: 14, default_value: 'HP India Sales Private Ltd.' },
-  { key: 'manufactured_for_address', label: 'Manufactured For Address', enabled: true, font_size: 10, bold: false, alignment: 'left' as const, order: 15, default_value: 'No.24, Kothari Arena, Hosur Main Road, Adugodi, Bangalore, Karnataka - 560030' },
+  { key: 'manufactured_for_address', label: 'Manufactured For Address', enabled: true, font_size: 10, bold: false, alignment: 'left' as const, order: 15, default_value: 'No.24, Kothari Arena,Hosur Main Road,\nAdugodi , Bangalore, Karnataka - 560030' },
 ];
 
 const DESKTOP_TEMPLATE_FIELDS = [
@@ -88,13 +88,13 @@ const getPrinterCustomDefaults = (product?: Product) => ({
 
 const getAioCustomDefaults = () => ({
   manufactured_for_name: 'HP India Sales Private Ltd.',
-  manufactured_for_address: 'No.24, Kothari Arena, Hosur Main Road, Adugodi, Bangalore, Karnataka - 560030',
+  manufactured_for_address: 'No.24, Kothari Arena,Hosur Main Road,\nAdugodi , Bangalore, Karnataka - 560030',
 });
 
-const getDesktopCustomDefaults = () => ({
-  manufactured_for_name: 'HP India Sales Private Ltd.',
-  manufactured_for_address: 'No.24, Kothari Arena, Hosur Main Road, Adugodi, Bangalore, Karnataka - 560030',
-  generic_note: '(EXCLUDING MONITOR)',
+const getDesktopCustomDefaults = (product?: Product) => ({
+  manufactured_for_name: product?.manufactured_for_name || 'HP India Sales Private Ltd.',
+  manufactured_for_address: product?.manufactured_for_address || 'No.24, Kothari Arena, Hosur Main Road, Adugodi, Banglore,Karnataka - 560030.',
+  generic_note: product?.generic_note || '(EXCLUDING MONITOR)',
 });
 
 const withPrinterFields = (fields: LabelTemplate['fields'] = [], productNumber = '', genericName = '') => {
@@ -346,7 +346,7 @@ export const CreateLabel: React.FC<CreateLabelProps> = ({
       setCustomFieldValues((current) => ({
         ...current,
         ...Object.fromEntries(
-          Object.entries(getDesktopCustomDefaults()).filter(([key]) => !current[key])
+          Object.entries(getDesktopCustomDefaults(prod)).filter(([key]) => !current[key])
         ),
       }));
     }
@@ -1100,15 +1100,17 @@ export const CreateLabel: React.FC<CreateLabelProps> = ({
               </button>
             </div>
 
-            <div className="p-4 overflow-auto flex-1 flex flex-col items-center justify-start bg-slate-100/80">
-              <div className="shadow-2xl rounded-xs origin-top scale-[0.78]">
-                <PrintableLabel
-                  snapshot={activeSnapshot}
-                  copies={1}
-                  isPrintMode={false}
-                />
+            <div className="p-4 overflow-auto flex-1 flex flex-col items-center justify-start gap-4 bg-slate-100/80">
+              <div className="origin-top">
+                <div className="shadow-2xl rounded-xs origin-top scale-[0.78]">
+                  <PrintableLabel
+                    snapshot={activeSnapshot}
+                    copies={1}
+                    isPrintMode={false}
+                  />
+                </div>
               </div>
-              <p className="text-center text-[10px] text-slate-400 -mt-24">
+              <p className="text-center text-[10px] text-slate-400">
                 This exact layout will be dispatched to the physical label printer.
               </p>
             </div>

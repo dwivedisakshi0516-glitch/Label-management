@@ -40,22 +40,25 @@ const DEFAULT_TEMPLATE_FIELDS: TemplateField[] = [
 const SAMPLE_SNAPSHOT_DATA: LabelSnapshot = {
   productName: 'HP ProDesk 2 G1a Tower',
   brand: 'HP',
-  productNumber: 'HP-PD-2G1A-TW',
+  productNumber: 'D1VT0AT#ACJ',
   manufacturerName: 'Flextronics Technologies India Pvt. Ltd.',
-  manufacturerAddress: 'Plot No. 1, Industrial Park, Sandur Road, Sriperumbudur, Tamil Nadu 602105',
-  customerCareProfile: 'HP India Customer Care',
-  customerCareAddress: 'Building 2, Think Campus, Electronic City Phase 1, Bangalore, Karnataka - 560100',
+  manufacturerAddress: 'Plot No.3, PhaseII SIPCOT Industrial Park, DTA Sandavellur C Village, Sriperumbudur Taluk Kanchipuram, Tamilnadu-602106.',
+  manufactured_for_name: 'HP India Sales Private Ltd.',
+  manufactured_for_address: 'No.24, Kothari Arena, Hosur Main Road, Adugodi, Banglore,Karnataka - 560030.',
+  customerCareProfile: 'Customer Care',
+  customerCareAddress: 'Same address as above',
   customerCareEmail: 'in.contact@hp.com',
-  customerCarePhone: '1-800-425-4999',
-  customerCareWhatsApp: '+91-8867619377',
+  customerCarePhone: '1-800-258-7170',
+  customerCareWhatsApp: '+91 22 6101 4560',
   customerCareWebsite: 'www.hp.com/in',
   warranty: '5 Years',
   countryOfOrigin: 'India',
   genericName: 'DESKTOP COMPUTER',
+  generic_note: '(EXCLUDING MONITOR)',
   netQuantity: '1 N',
   mrp: 114229.0,
   taxText: 'Incl. of all Taxes',
-  packContents: 'Desktop Computer 1 N, Central Processing Unit 1 N, Cable Set 1 N, Keyboard 1 N, Mouse 1 N',
+  packContents: 'DESKTOP COMPUTER 1 N\nCENTRAL PROCESSING UNIT 1 N,\nCABLE SET 1 N, KEYBOARD 1 N, MOUSE 1 N',
   month: 'Jul',
   year: '2026',
 };
@@ -68,6 +71,31 @@ const toFieldKey = (label: string, fallback = `custom_field_${Date.now()}`) =>
     .replace(/^_+|_+$/g, '') || fallback;
 
 const DEFAULT_FIELD_KEYS = new Set(DEFAULT_TEMPLATE_FIELDS.map((field) => field.key));
+
+const DESKTOP_TEMPLATE_NAME = 'Desktop Label Template (63x127mm)';
+
+const DESKTOP_TEMPLATE_FIELDS: TemplateField[] = [
+  ...DEFAULT_TEMPLATE_FIELDS,
+  { key: 'manufactured_for_name', label: 'Manufactured For Name', enabled: true, font_size: 10, bold: true, alignment: 'left', order: 14, default_value: 'HP India Sales Private Ltd.' },
+  { key: 'manufactured_for_address', label: 'Manufactured For Address', enabled: true, font_size: 10, bold: false, alignment: 'left', order: 15, default_value: 'No.24, Kothari Arena, Hosur Main Road, Adugodi, Banglore,Karnataka - 560030.' },
+  { key: 'generic_note', label: 'Generic Name Note', enabled: true, font_size: 9, bold: false, alignment: 'left', order: 16, default_value: '(EXCLUDING MONITOR)' },
+];
+
+const buildDesktopTemplate = (categories: Category[]): LabelTemplate => {
+  const desktopCategory = categories.find((category) => category.name.toLowerCase() === 'desktop computer');
+
+  return {
+    id: 'builtin-desktop-label-template',
+    name: DESKTOP_TEMPLATE_NAME,
+    category_id: desktopCategory?.id || '',
+    category_name: 'Desktop Computer',
+    width_mm: 63,
+    height_mm: 127,
+    fields: DESKTOP_TEMPLATE_FIELDS,
+    layout_style: 'desktop',
+    is_default: false,
+  };
+};
 
 export const Templates: React.FC = () => {
   const toast = useToast();
@@ -91,7 +119,7 @@ export const Templates: React.FC = () => {
   // Form Fields
   const [name, setName] = useState('');
   const [categoryId, setCategoryId] = useState('');
-  const [layoutStyle, setLayoutStyle] = useState<'standard' | 'printer' | 'aio'>('standard');
+  const [layoutStyle, setLayoutStyle] = useState<'standard' | 'printer' | 'aio' | 'desktop'>('standard');
   const [widthMm, setWidthMm] = useState<number>(100);
   const [heightMm, setHeightMm] = useState<number>(150);
   const [fields, setFields] = useState<TemplateField[]>(DEFAULT_TEMPLATE_FIELDS);
@@ -107,7 +135,23 @@ export const Templates: React.FC = () => {
         templatesApi.getAll(),
         categoriesApi.getAll(),
       ]);
-      setTemplates(tpls);
+      const hasDesktopTemplate = tpls.some(
+        (tpl) => tpl.name === DESKTOP_TEMPLATE_NAME || tpl.layout_style === 'desktop'
+      );
+      let nextTemplates = tpls;
+
+      if (!hasDesktopTemplate) {
+        const desktopTemplate = buildDesktopTemplate(cats);
+
+        try {
+          const createdTemplate = await templatesApi.create(desktopTemplate);
+          nextTemplates = [...tpls, createdTemplate];
+        } catch (createErr) {
+          nextTemplates = [...tpls, desktopTemplate];
+        }
+      }
+
+      setTemplates(nextTemplates);
       setCategories(cats);
     } catch (err) {
       toast.error('Failed to load templates.');
@@ -131,7 +175,7 @@ export const Templates: React.FC = () => {
     setEditingTemplate(tpl);
     setName(tpl.name);
     setCategoryId(tpl.category_id || '');
-    setLayoutStyle((tpl.layout_style as 'standard' | 'printer' | 'aio') || 'standard');
+    setLayoutStyle((tpl.layout_style as 'standard' | 'printer' | 'aio' | 'desktop') || 'standard');
     setWidthMm(tpl.width_mm || 100);
     setHeightMm(tpl.height_mm || 150);
     setFields(
@@ -481,10 +525,11 @@ export const Templates: React.FC = () => {
                   </label>
                   <select
                     value={layoutStyle}
-                    onChange={(e) => setLayoutStyle(e.target.value as 'standard' | 'printer' | 'aio')}
+                    onChange={(e) => setLayoutStyle(e.target.value as 'standard' | 'printer' | 'aio' | 'desktop')}
                     className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:ring-2 focus:ring-blue-500 focus:bg-white focus:outline-hidden"
                   >
                     <option value="standard">Standard</option>
+                    <option value="desktop">Desktop</option>
                     <option value="printer">Printer</option>
                     <option value="aio">AIO Computer</option>
                   </select>
@@ -717,15 +762,17 @@ export const Templates: React.FC = () => {
               </button>
             </div>
 
-            <div className="p-4 overflow-auto flex-1 flex flex-col items-center justify-start bg-slate-100/80">
-              <div className="shadow-2xl rounded-xs origin-top scale-[0.78]">
-                <PrintableLabel
-                  snapshot={previewSnapshot}
-                  copies={1}
-                  isPrintMode={false}
-                />
+            <div className="p-4 overflow-auto flex-1 flex flex-col items-center justify-start gap-4 bg-slate-100/80">
+              <div className="origin-top">
+                <div className="shadow-2xl rounded-xs origin-top scale-[0.78]">
+                  <PrintableLabel
+                    snapshot={previewSnapshot}
+                    copies={1}
+                    isPrintMode={false}
+                  />
+                </div>
               </div>
-              <p className="text-center text-[10px] text-slate-400 -mt-24">
+              <p className="text-center text-[10px] text-slate-400">
                 Exact physical 1:1 proportion preview with Legal Metrology compliance layout.
               </p>
             </div>

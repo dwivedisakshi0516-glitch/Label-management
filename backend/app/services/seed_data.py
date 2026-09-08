@@ -278,8 +278,12 @@ async def seed_initial_data():
             "name": "HP ProDesk 2 G1a Tower",
             "category_name": "Desktop Computer",
             "brand": "HP",
-            "product_number": "HP-PD-2G1A-TW",
+            "product_number": "D1VT0AT#ACJ",
             "mfg_name": "Flextronics Technologies India Pvt. Ltd.",
+            "manufacturer_address": "Plot No.3, PhaseII SIPCOT Industrial Park, DTA Sandavellur C Village, Sriperumbudur Taluk Kanchipuram, Tamilnadu-602106.",
+            "manufactured_for_name": "HP India Sales Private Ltd.",
+            "manufactured_for_address": "No.24, Kothari Arena, Hosur Main Road, Adugodi, Banglore,Karnataka - 560030.",
+            "generic_note": "(EXCLUDING MONITOR)",
             "cc_name": "HP India Customer Care",
             "warranty_name": "5 Years",
             "country_of_origin": "India",
@@ -287,7 +291,7 @@ async def seed_initial_data():
             "net_quantity": "1 N",
             "default_mrp": 114229.0,
             "tax_text": "Incl. of all Taxes",
-            "pack_contents": "Desktop Computer 1 N, Central Processing Unit 1 N, Cable Set 1 N, Keyboard 1 N, Mouse 1 N",
+            "pack_contents": "DESKTOP COMPUTER 1 N\nCENTRAL PROCESSING UNIT 1 N,\nCABLE SET 1 N, KEYBOARD 1 N, MOUSE 1 N",
             "status": "Active"
         },
         {
@@ -296,6 +300,9 @@ async def seed_initial_data():
             "brand": "HP",
             "product_number": "D2UP4PT#ACJ",
             "mfg_name": "Flextronics Technologies India Pvt. Ltd.",
+            "manufacturer_address": "Plot No.3, PhaseII SIPCOT Industrial Park,DTA Sandavellur C Village,\nSriperumbudur Taluk Kanchipuram\nTamilnadu - 602106",
+            "manufactured_for_name": "HP India Sales Private Ltd.",
+            "manufactured_for_address": "No.24, Kothari Arena,Hosur Main Road,\nAdugodi , Bangalore, Karnataka - 560030",
             "cc_name": "HP India Customer Care",
             "warranty_name": "5 Years",
             "country_of_origin": "India",
@@ -436,6 +443,9 @@ async def seed_initial_data():
                 "manufacturer_id": mfg_id,
                 "manufacturer_name": p["mfg_name"],
                 "manufacturer_address": p.get("manufacturer_address", ""),
+                "manufactured_for_name": p.get("manufactured_for_name", ""),
+                "manufactured_for_address": p.get("manufactured_for_address", ""),
+                "generic_note": p.get("generic_note", ""),
                 "importer_name": p.get("importer_name", ""),
                 "imported_in": p.get("imported_in", ""),
                 "customer_care_other_numbers": p.get("customer_care_other_numbers", ""),
@@ -466,6 +476,9 @@ async def seed_initial_data():
                     "manufacturer_id": mfg_id,
                     "manufacturer_name": p["mfg_name"],
                     "manufacturer_address": p.get("manufacturer_address", ""),
+                    "manufactured_for_name": p.get("manufactured_for_name", ""),
+                    "manufactured_for_address": p.get("manufactured_for_address", ""),
+                    "generic_note": p.get("generic_note", ""),
                     "importer_name": p.get("importer_name", ""),
                     "imported_in": p.get("imported_in", ""),
                     "customer_care_other_numbers": p.get("customer_care_other_numbers", ""),
@@ -517,6 +530,27 @@ async def seed_initial_data():
             "updated_at": datetime.datetime.utcnow().isoformat()
         }
         await templates_coll.insert_one(t_doc)
+    else:
+        standard_updates = {}
+        if float(default_template.get("width_mm", 100.0)) != 100.0:
+            standard_updates["width_mm"] = 100.0
+        if float(default_template.get("height_mm", 150.0)) != 150.0:
+            standard_updates["height_mm"] = 150.0
+        if default_template.get("layout_style") != "standard":
+            standard_updates["layout_style"] = "standard"
+        if default_template.get("category_id", "") != "":
+            standard_updates["category_id"] = ""
+        if default_template.get("category_name", "") != "Universal / All Categories":
+            standard_updates["category_name"] = "Universal / All Categories"
+        if not default_template.get("is_default", False):
+            standard_updates["is_default"] = True
+
+        if standard_updates:
+            standard_updates["updated_at"] = datetime.datetime.utcnow().isoformat()
+            await templates_coll.update_one(
+                {"id": default_template["id"]},
+                {"$set": standard_updates}
+            )
 
     printer_template = await templates_coll.find_one({"name": "Printer Compliance Label (100x95mm)"})
     if not printer_template:
@@ -570,6 +604,28 @@ async def seed_initial_data():
                 }}
             )
             printer_template = await templates_coll.find_one({"name": "Printer Compliance Label (100x95mm)"})
+
+    desktop_template = await templates_coll.find_one({"name": "Desktop Label Template (63x127mm)"})
+    if not desktop_template:
+        desktop_fields = fields + [
+            {"key": "manufactured_for_name", "label": "Manufactured For Name", "enabled": True, "font_size": 10, "bold": True, "alignment": "left", "order": 14, "default_value": "HP India Sales Private Ltd."},
+            {"key": "manufactured_for_address", "label": "Manufactured For Address", "enabled": True, "font_size": 10, "bold": False, "alignment": "left", "order": 15, "default_value": "No.24, Kothari Arena, Hosur Main Road, Adugodi, Banglore,Karnataka - 560030."},
+            {"key": "generic_note", "label": "Generic Name Note", "enabled": True, "font_size": 9, "bold": False, "alignment": "left", "order": 16, "default_value": "(EXCLUDING MONITOR)"}
+        ]
+        await templates_coll.insert_one({
+            "id": str(uuid.uuid4()),
+            "name": "Desktop Label Template (63x127mm)",
+            "category_id": cat_map.get("Desktop Computer", ""),
+            "category_name": "Desktop Computer",
+            "width_mm": 63.0,
+            "height_mm": 127.0,
+            "fields": desktop_fields,
+            "layout_style": "desktop",
+            "is_default": False,
+            "created_at": datetime.datetime.utcnow().isoformat(),
+            "updated_at": datetime.datetime.utcnow().isoformat()
+        })
+        desktop_template = await templates_coll.find_one({"name": "Desktop Label Template (63x127mm)"})
 
     aio_template = await templates_coll.find_one({"name": "AIO Computer Tall Label (65x150mm)"})
     if not aio_template:
@@ -712,12 +768,12 @@ async def seed_initial_data():
                 "brand": "HP",
                 "productNumber": "D2UP4PT#ACJ",
                 "manufacturerName": "Flextronics Technologies India Pvt. Ltd.",
-                "manufacturerAddress": "Plot No.3, PhaseII SIPCOT Industrial Park, DTA Sandavellur C Village, Sriperumbudur Taluk Kanchipuram Tamilnadu - 602106",
+                "manufacturerAddress": "Plot No.3, PhaseII SIPCOT Industrial Park,DTA Sandavellur C Village,\nSriperumbudur Taluk Kanchipuram\nTamilnadu - 602106",
                 "customerCareProfile": "Customer Care",
                 "customerCareAddress": "Same address as above",
                 "customerCareEmail": "in.contact@hp.com",
-                "customerCarePhone": "1-800-258-7170",
-                "customerCareTollFree": "1-800-258-7170",
+                "customerCarePhone": "1-800-258-7170 (toll free)",
+                "customerCareTollFree": "1-800-258-7170 (toll free)",
                 "customerCareWhatsApp": "+ 91 22 6101 4560",
                 "customerCareWebsite": "",
                 "warranty": "5 Years",
@@ -735,7 +791,7 @@ async def seed_initial_data():
                 "fields": aio_fields,
                 "layoutStyle": "aio",
                 "manufactured_for_name": "HP India Sales Private Ltd.",
-                "manufactured_for_address": "No.24, Kothari Arena, Hosur Main Road, Adugodi, Bangalore, Karnataka - 560030"
+                "manufactured_for_address": "No.24, Kothari Arena,Hosur Main Road,\nAdugodi , Bangalore, Karnataka - 560030"
             },
             "created_by": "Admin",
             "created_at": now
